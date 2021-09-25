@@ -94,5 +94,26 @@ func (t *Transformer) Transform(env map[string]interface{}, input map[string]int
 }
 
 func (t *Transformer) SetScript(script string) {
-	t.script = `function main() {` + script + `}`
+	t.script = `
+function run() {` + script + `}
+function scanStruct(obj) {
+	for (key in obj) {
+		val = obj[key]
+		if (val === undefined) {
+			delete obj[key]
+		} else if (val == null) {
+			continue
+		} else if (val instanceof Array) {
+			scanStruct(val)
+		} else if (typeof val === 'object') {
+			scanStruct(val)
+		}
+	}
+}
+function main() {
+	v = run()
+	scanStruct(v)
+	return v
+}
+`
 }
