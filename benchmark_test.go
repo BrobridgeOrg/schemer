@@ -36,7 +36,7 @@ func BenchmarkScan(b *testing.B) {
 
 	// Initializing schema
 	schema := NewSchema()
-	err := UnmarsalJSON([]byte(definition), schema)
+	err := UnmarshalJSON([]byte(definition), schema)
 	if err != nil {
 		b.Fatal(err)
 	}
@@ -55,13 +55,13 @@ func BenchmarkScan(b *testing.B) {
 func BenchmarkTransformer(b *testing.B) {
 
 	testSourceSchema := NewSchema()
-	err := UnmarsalJSON([]byte(testSource), testSourceSchema)
+	err := UnmarshalJSON([]byte(testSource), testSourceSchema)
 	if err != nil {
 		b.Fatal(err)
 	}
 
 	testDestSchema := NewSchema()
-	err = UnmarsalJSON([]byte(testDest), testDestSchema)
+	err = UnmarshalJSON([]byte(testDest), testDestSchema)
 	if err != nil {
 		b.Fatal(err)
 	}

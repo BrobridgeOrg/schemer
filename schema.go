@@ -98,7 +98,7 @@ func (s *Schema) Scan(data map[string]interface{}) *Record {
 	return NewRecord(s, s.normalize(s, data))
 }
 
-func UnmarsalJSON(source []byte, s *Schema) error {
+func UnmarshalJSON(source []byte, s *Schema) error {
 
 	// Parsing original JSON string
 	var raw map[string]interface{}
@@ -108,7 +108,7 @@ func UnmarsalJSON(source []byte, s *Schema) error {
 	}
 
 	// Create a new schema
-	err = Unmarsal(raw, s)
+	err = Unmarshal(raw, s)
 	if err != nil {
 		return err
 	}
@@ -116,7 +116,7 @@ func UnmarsalJSON(source []byte, s *Schema) error {
 	return nil
 }
 
-func Unmarsal(data map[string]interface{}, s *Schema) error {
+func Unmarshal(data map[string]interface{}, s *Schema) error {
 
 	for key, value := range data {
 

@@ -34,7 +34,7 @@ func TestSchemaUnmarshal(t *testing.T) {
 }`
 
 	schema := NewSchema()
-	err := UnmarsalJSON([]byte(source), schema)
+	err := UnmarshalJSON([]byte(source), schema)
 	if err != nil {
 		t.Error(err)
 	}
@@ -90,7 +90,7 @@ func TestSchemaScan(t *testing.T) {
 
 	// Initializing schema
 	schema := NewSchema()
-	err := UnmarsalJSON([]byte(definition), schema)
+	err := UnmarshalJSON([]byte(definition), schema)
 	if err != nil {
 		t.Error(err)
 	}

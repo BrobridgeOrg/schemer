@@ -112,8 +112,18 @@ function scanStruct(obj) {
 }
 function main() {
 	v = run()
+	if (v === null)
+		return null
 	scanStruct(v)
 	return v
 }
 `
+}
+
+func (t *Transformer) SetSourceSchema(schema *Schema) {
+	t.source = schema
+}
+
+func (t *Transformer) SetDestinationSchema(schema *Schema) {
+	t.dest = schema
 }

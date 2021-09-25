@@ -51,13 +51,13 @@ var testDest = `{
 func TestTransformer(t *testing.T) {
 
 	testSourceSchema := NewSchema()
-	err := UnmarsalJSON([]byte(testSource), testSourceSchema)
+	err := UnmarshalJSON([]byte(testSource), testSourceSchema)
 	if err != nil {
 		t.Error(err)
 	}
 
 	testDestSchema := NewSchema()
-	err = UnmarsalJSON([]byte(testDest), testDestSchema)
+	err = UnmarshalJSON([]byte(testDest), testDestSchema)
 	if err != nil {
 		t.Error(err)
 	}
@@ -111,13 +111,13 @@ func TestTransformer(t *testing.T) {
 func TestTransformerEnv(t *testing.T) {
 
 	testSourceSchema := NewSchema()
-	err := UnmarsalJSON([]byte(testSource), testSourceSchema)
+	err := UnmarshalJSON([]byte(testSource), testSourceSchema)
 	if err != nil {
 		t.Error(err)
 	}
 
 	testDestSchema := NewSchema()
-	err = UnmarsalJSON([]byte(testDest), testDestSchema)
+	err = UnmarshalJSON([]byte(testDest), testDestSchema)
 	if err != nil {
 		t.Error(err)
 	}
@@ -162,13 +162,13 @@ func TestTransformerEnv(t *testing.T) {
 func TestTransformer_MultipleResults(t *testing.T) {
 
 	testSourceSchema := NewSchema()
-	err := UnmarsalJSON([]byte(testSource), testSourceSchema)
+	err := UnmarshalJSON([]byte(testSource), testSourceSchema)
 	if err != nil {
 		t.Error(err)
 	}
 
 	testDestSchema := NewSchema()
-	err = UnmarsalJSON([]byte(testDest), testDestSchema)
+	err = UnmarshalJSON([]byte(testDest), testDestSchema)
 	if err != nil {
 		t.Error(err)
 	}
@@ -214,13 +214,13 @@ func TestTransformer_MultipleResults(t *testing.T) {
 func TestTransformer_Default(t *testing.T) {
 
 	testSourceSchema := NewSchema()
-	err := UnmarsalJSON([]byte(testSource), testSourceSchema)
+	err := UnmarshalJSON([]byte(testSource), testSourceSchema)
 	if err != nil {
 		t.Error(err)
 	}
 
 	testDestSchema := NewSchema()
-	err = UnmarsalJSON([]byte(testDest), testDestSchema)
+	err = UnmarshalJSON([]byte(testDest), testDestSchema)
 	if err != nil {
 		t.Error(err)
 	}
@@ -255,13 +255,13 @@ func TestTransformer_Default(t *testing.T) {
 func TestTransformer_NullResult(t *testing.T) {
 
 	testSourceSchema := NewSchema()
-	err := UnmarsalJSON([]byte(testSource), testSourceSchema)
+	err := UnmarshalJSON([]byte(testSource), testSourceSchema)
 	if err != nil {
 		t.Error(err)
 	}
 
 	testDestSchema := NewSchema()
-	err = UnmarsalJSON([]byte(testDest), testDestSchema)
+	err = UnmarshalJSON([]byte(testDest), testDestSchema)
 	if err != nil {
 		t.Error(err)
 	}
@@ -297,13 +297,13 @@ func TestTransformer_NullResult(t *testing.T) {
 func TestTransformer_NestedStructure(t *testing.T) {
 
 	sourceSchema := NewSchema()
-	err := UnmarsalJSON([]byte(testSource), sourceSchema)
+	err := UnmarshalJSON([]byte(testSource), sourceSchema)
 	if err != nil {
 		t.Error(err)
 	}
 
 	destSchema := NewSchema()
-	err = UnmarsalJSON([]byte(testDest), destSchema)
+	err = UnmarshalJSON([]byte(testDest), destSchema)
 	if err != nil {
 		t.Error(err)
 	}
@@ -349,13 +349,13 @@ func TestTransformer_NestedStructure(t *testing.T) {
 func TestTransformer_Source_Integer(t *testing.T) {
 
 	sourceSchema := NewSchema()
-	err := UnmarsalJSON([]byte(testSource), sourceSchema)
+	err := UnmarshalJSON([]byte(testSource), sourceSchema)
 	if err != nil {
 		t.Error(err)
 	}
 
 	destSchema := NewSchema()
-	err = UnmarsalJSON([]byte(testDest), destSchema)
+	err = UnmarshalJSON([]byte(testDest), destSchema)
 	if err != nil {
 		t.Error(err)
 	}
@@ -405,13 +405,13 @@ func TestTransformer_Source_Integer(t *testing.T) {
 func TestTransformer_Source_UnsignedInteger(t *testing.T) {
 
 	sourceSchema := NewSchema()
-	err := UnmarsalJSON([]byte(testSource), sourceSchema)
+	err := UnmarshalJSON([]byte(testSource), sourceSchema)
 	if err != nil {
 		t.Error(err)
 	}
 
 	destSchema := NewSchema()
-	err = UnmarsalJSON([]byte(testDest), destSchema)
+	err = UnmarshalJSON([]byte(testDest), destSchema)
 	if err != nil {
 		t.Error(err)
 	}
@@ -461,13 +461,13 @@ func TestTransformer_Source_UnsignedInteger(t *testing.T) {
 func TestTransformer_Source_Float(t *testing.T) {
 
 	sourceSchema := NewSchema()
-	err := UnmarsalJSON([]byte(testSource), sourceSchema)
+	err := UnmarshalJSON([]byte(testSource), sourceSchema)
 	if err != nil {
 		t.Error(err)
 	}
 
 	destSchema := NewSchema()
-	err = UnmarsalJSON([]byte(testDest), destSchema)
+	err = UnmarshalJSON([]byte(testDest), destSchema)
 	if err != nil {
 		t.Error(err)
 	}
@@ -517,13 +517,13 @@ func TestTransformer_Source_Float(t *testing.T) {
 func TestTransformer_Source_String(t *testing.T) {
 
 	sourceSchema := NewSchema()
-	err := UnmarsalJSON([]byte(testSource), sourceSchema)
+	err := UnmarshalJSON([]byte(testSource), sourceSchema)
 	if err != nil {
 		t.Error(err)
 	}
 
 	destSchema := NewSchema()
-	err = UnmarsalJSON([]byte(testDest), destSchema)
+	err = UnmarshalJSON([]byte(testDest), destSchema)
 	if err != nil {
 		t.Error(err)
 	}
@@ -577,13 +577,13 @@ func TestTransformer_Source_String(t *testing.T) {
 func TestTransformer_Source_Bool(t *testing.T) {
 
 	sourceSchema := NewSchema()
-	err := UnmarsalJSON([]byte(testSource), sourceSchema)
+	err := UnmarshalJSON([]byte(testSource), sourceSchema)
 	if err != nil {
 		t.Error(err)
 	}
 
 	destSchema := NewSchema()
-	err = UnmarsalJSON([]byte(testDest), destSchema)
+	err = UnmarshalJSON([]byte(testDest), destSchema)
 	if err != nil {
 		t.Error(err)
 	}
@@ -633,13 +633,13 @@ func TestTransformer_Source_Bool(t *testing.T) {
 func TestTransformer_Source_Time(t *testing.T) {
 
 	sourceSchema := NewSchema()
-	err := UnmarsalJSON([]byte(testSource), sourceSchema)
+	err := UnmarshalJSON([]byte(testSource), sourceSchema)
 	if err != nil {
 		t.Error(err)
 	}
 
 	destSchema := NewSchema()
-	err = UnmarsalJSON([]byte(testDest), destSchema)
+	err = UnmarshalJSON([]byte(testDest), destSchema)
 	if err != nil {
 		t.Error(err)
 	}
@@ -693,13 +693,13 @@ func TestTransformer_Source_Time(t *testing.T) {
 func TestTransformer_Source_MicroTime(t *testing.T) {
 
 	sourceSchema := NewSchema()
-	err := UnmarsalJSON([]byte(testSource), sourceSchema)
+	err := UnmarshalJSON([]byte(testSource), sourceSchema)
 	if err != nil {
 		t.Error(err)
 	}
 
 	destSchema := NewSchema()
-	err = UnmarsalJSON([]byte(testDest), destSchema)
+	err = UnmarshalJSON([]byte(testDest), destSchema)
 	if err != nil {
 		t.Error(err)
 	}

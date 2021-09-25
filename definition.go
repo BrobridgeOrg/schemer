@@ -41,7 +41,7 @@ func UnmarshalDefinition(data interface{}, d *Definition) error {
 		d.Subtype = ValueTypes[raw.Subtype]
 	case TYPE_MAP:
 		s := NewSchema()
-		err = Unmarsal(raw.Fields, s)
+		err = Unmarshal(raw.Fields, s)
 		if err != nil {
 			return err
 		}
