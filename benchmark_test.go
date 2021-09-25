@@ -1,0 +1,104 @@
+package schemer
+
+import (
+	"encoding/json"
+	"testing"
+)
+
+func BenchmarkScan(b *testing.B) {
+
+	definition := `{
+	"name": { "type": "string" },
+	"balance": { "type": "int" },
+	"key": { "type": "binary" },
+	"createdAt": { "type": "time" },
+	"updatedAt": { "type": "time" },
+	"attributes": {
+		"type": "map",
+		"fields": {
+			"title": { "type": "string" },
+			"team": { "type": "string" }
+		}
+	}
+}`
+
+	recordSource := `{
+	"name": "Fred",
+	"balance": 123456,
+	"key": [ 12, 34 ],
+	"createdAt": 1595182568,
+	"updatedAt": "2020-07-19T18:16:08.000001Z",
+	"attributes": {
+		"title": "Architect",
+		"team": "product"
+	}
+}`
+
+	// Initializing schema
+	schema := NewSchema()
+	err := UnmarsalJSON([]byte(definition), schema)
+	if err != nil {
+		b.Fatal(err)
+	}
+
+	// Initializing record
+	var rawData map[string]interface{}
+	json.Unmarshal([]byte(recordSource), &rawData)
+
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		// Scan raw data
+		schema.Scan(rawData)
+	}
+}
+
+func BenchmarkTransformer(b *testing.B) {
+
+	testSourceSchema := NewSchema()
+	err := UnmarsalJSON([]byte(testSource), testSourceSchema)
+	if err != nil {
+		b.Fatal(err)
+	}
+
+	testDestSchema := NewSchema()
+	err = UnmarsalJSON([]byte(testDest), testDestSchema)
+	if err != nil {
+		b.Fatal(err)
+	}
+
+	// Create transformer
+	transformer := NewTransformer(testSourceSchema, testDestSchema)
+
+	// Set transform script
+	transformer.SetScript(`
+	return {
+		string: source.string + 'TEST',
+		int: source.int + 1,
+		uint: source.uint + 1,
+		float: source.float,
+		bool: source.bool
+	}
+`)
+
+	// Transform
+	rawData := `{
+	"string": "Brobridge",
+	"int": -9527,
+	"uint": 9527,
+	"float": 11.15,
+	"bool": false
+}`
+	var sourceData map[string]interface{}
+	err = json.Unmarshal([]byte(rawData), &sourceData)
+	if err != nil {
+		b.Fatal(err)
+	}
+
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		_, err := transformer.Transform(sourceData)
+		if err != nil {
+			b.Fatal(err)
+		}
+	}
+}
