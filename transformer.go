@@ -28,7 +28,10 @@ func NewTransformer(source *Schema, dest *Schema) *Transformer {
 
 func (t *Transformer) Transform(env map[string]interface{}, input map[string]interface{}) ([]map[string]interface{}, error) {
 
-	data := t.source.Normalize(input)
+	var data map[string]interface{} = input
+	if t.source != nil {
+		data = t.source.Normalize(input)
+	}
 
 	// Preparing context and runtime
 	ctx := t.ctxPool.Get().(*Context)
@@ -58,9 +61,14 @@ func (t *Transformer) Transform(env map[string]interface{}, input map[string]int
 	// Result is an object
 	if v, ok := result.(map[string]interface{}); ok {
 
+		var val map[string]interface{} = v
+		if t.dest != nil {
+			val = t.dest.Normalize(v)
+		}
+
 		// Normalized for destination schema then returning result
 		return []map[string]interface{}{
-			t.dest.Normalize(v),
+			val,
 		}, nil
 	} else if v, ok := result.([]interface{}); ok {
 		// Result is an array
@@ -69,7 +77,13 @@ func (t *Transformer) Transform(env map[string]interface{}, input map[string]int
 		for i, d := range v {
 
 			if v, ok := d.(map[string]interface{}); ok {
-				returnedValue[i] = v
+
+				var val map[string]interface{} = v
+				if t.dest != nil {
+					val = t.dest.Normalize(v)
+				}
+
+				returnedValue[i] = val
 			}
 		}
 
