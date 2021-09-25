@@ -90,7 +90,7 @@ func TestTransformer(t *testing.T) {
 		t.Error(err)
 	}
 
-	returnedValue, err := transformer.Transform(sourceData)
+	returnedValue, err := transformer.Transform(nil, sourceData)
 	if err != nil {
 		t.Error(err)
 	}
@@ -106,6 +106,57 @@ func TestTransformer(t *testing.T) {
 	assert.Equal(t, uint64(9527)+1, result["uint"].(uint64))
 	assert.Equal(t, float64(11.15), result["float"].(float64))
 	assert.Equal(t, false, result["bool"].(bool))
+}
+
+func TestTransformerEnv(t *testing.T) {
+
+	testSourceSchema := NewSchema()
+	err := UnmarsalJSON([]byte(testSource), testSourceSchema)
+	if err != nil {
+		t.Error(err)
+	}
+
+	testDestSchema := NewSchema()
+	err = UnmarsalJSON([]byte(testDest), testDestSchema)
+	if err != nil {
+		t.Error(err)
+	}
+
+	// Create transformer
+	transformer := NewTransformer(testSourceSchema, testDestSchema)
+
+	// Set transform script
+	transformer.SetScript(`
+	return {
+		string: source.string + env.string
+	}
+`)
+
+	// Transform
+	rawData := `{
+	"string": "Brobridge"
+}`
+	var sourceData map[string]interface{}
+	err = json.Unmarshal([]byte(rawData), &sourceData)
+	if err != nil {
+		t.Error(err)
+	}
+
+	returnedValue, err := transformer.Transform(
+		map[string]interface{}{
+			"string": "test",
+		}, sourceData)
+	if err != nil {
+		t.Error(err)
+	}
+
+	if len(returnedValue) != 1 {
+		t.Fail()
+	}
+
+	result := returnedValue[0]
+
+	assert.Equal(t, "Brobridge"+"test", result["string"].(string))
 }
 
 func TestTransformer_MultipleResults(t *testing.T) {
@@ -147,7 +198,7 @@ func TestTransformer_MultipleResults(t *testing.T) {
 		t.Error(err)
 	}
 
-	results, err := transformer.Transform(sourceData)
+	results, err := transformer.Transform(nil, sourceData)
 	if err != nil {
 		t.Error(err)
 	}
@@ -187,7 +238,7 @@ func TestTransformer_Default(t *testing.T) {
 		t.Error(err)
 	}
 
-	results, err := transformer.Transform(sourceData)
+	results, err := transformer.Transform(nil, sourceData)
 	if err != nil {
 		t.Error(err)
 	}
@@ -233,7 +284,7 @@ func TestTransformer_NullResult(t *testing.T) {
 		t.Error(err)
 	}
 
-	results, err := transformer.Transform(sourceData)
+	results, err := transformer.Transform(nil, sourceData)
 	if err != nil {
 		t.Error(err)
 	}
@@ -281,7 +332,7 @@ func TestTransformer_NestedStructure(t *testing.T) {
 		t.Error(err)
 	}
 
-	results, err := transformer.Transform(sourceData)
+	results, err := transformer.Transform(nil, sourceData)
 	if err != nil {
 		t.Error(err)
 	}
@@ -333,7 +384,7 @@ func TestTransformer_Source_Integer(t *testing.T) {
 		t.Error(err)
 	}
 
-	results, err := transformer.Transform(sourceData)
+	results, err := transformer.Transform(nil, sourceData)
 	if err != nil {
 		t.Error(err)
 	}
@@ -389,7 +440,7 @@ func TestTransformer_Source_UnsignedInteger(t *testing.T) {
 		t.Error(err)
 	}
 
-	results, err := transformer.Transform(sourceData)
+	results, err := transformer.Transform(nil, sourceData)
 	if err != nil {
 		t.Error(err)
 	}
@@ -445,7 +496,7 @@ func TestTransformer_Source_Float(t *testing.T) {
 		t.Error(err)
 	}
 
-	results, err := transformer.Transform(sourceData)
+	results, err := transformer.Transform(nil, sourceData)
 	if err != nil {
 		t.Error(err)
 	}
@@ -503,7 +554,7 @@ func TestTransformer_Source_String(t *testing.T) {
 		t.Error(err)
 	}
 
-	results, err := transformer.Transform(sourceData)
+	results, err := transformer.Transform(nil, sourceData)
 	if err != nil {
 		t.Error(err)
 	}
@@ -561,7 +612,7 @@ func TestTransformer_Source_Bool(t *testing.T) {
 		t.Error(err)
 	}
 
-	results, err := transformer.Transform(sourceData)
+	results, err := transformer.Transform(nil, sourceData)
 	if err != nil {
 		t.Error(err)
 	}
@@ -619,7 +670,7 @@ func TestTransformer_Source_Time(t *testing.T) {
 		t.Error(err)
 	}
 
-	results, err := transformer.Transform(sourceData)
+	results, err := transformer.Transform(nil, sourceData)
 	if err != nil {
 		t.Error(err)
 	}
@@ -679,7 +730,7 @@ func TestTransformer_Source_MicroTime(t *testing.T) {
 		t.Error(err)
 	}
 
-	results, err := transformer.Transform(sourceData)
+	results, err := transformer.Transform(nil, sourceData)
 	if err != nil {
 		t.Error(err)
 	}

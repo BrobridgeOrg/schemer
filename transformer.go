@@ -26,7 +26,7 @@ func NewTransformer(source *Schema, dest *Schema) *Transformer {
 	return t
 }
 
-func (t *Transformer) Transform(input map[string]interface{}) ([]map[string]interface{}, error) {
+func (t *Transformer) Transform(env map[string]interface{}, input map[string]interface{}) ([]map[string]interface{}, error) {
 
 	data := t.source.Normalize(input)
 
@@ -40,6 +40,7 @@ func (t *Transformer) Transform(input map[string]interface{}) ([]map[string]inte
 		}
 	}
 
+	ctx.vm.Set("env", env)
 	ctx.vm.Set("source", data)
 
 	//var fn func() map[string]interface{}

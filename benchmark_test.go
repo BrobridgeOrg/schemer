@@ -96,7 +96,7 @@ func BenchmarkTransformer(b *testing.B) {
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		_, err := transformer.Transform(sourceData)
+		_, err := transformer.Transform(nil, sourceData)
 		if err != nil {
 			b.Fatal(err)
 		}
