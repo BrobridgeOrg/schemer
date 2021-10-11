@@ -10,6 +10,7 @@ import (
 
 var testSource = `{
 	"string": { "type": "string" },
+	"binary": { "type": "binary" },
 	"int": { "type": "int" },
 	"uint": { "type": "uint" },
 	"float": { "type": "float" },
@@ -30,6 +31,7 @@ var testSource = `{
 
 var testDest = `{
 	"string": { "type": "string" },
+	"binary": { "type": "binary" },
 	"int": { "type": "int" },
 	"uint": { "type": "uint" },
 	"float": { "type": "float" },
@@ -346,6 +348,64 @@ func TestTransformer_NestedStructure(t *testing.T) {
 	assert.Equal(t, "admin", result["string"].(string))
 }
 
+func TestTransformer_Source_Binary(t *testing.T) {
+
+	sourceSchema := NewSchema()
+	err := UnmarshalJSON([]byte(testSource), sourceSchema)
+	if err != nil {
+		t.Error(err)
+	}
+
+	destSchema := NewSchema()
+	err = UnmarshalJSON([]byte(testDest), destSchema)
+	if err != nil {
+		t.Error(err)
+	}
+
+	// Create transformer
+	transformer := NewTransformer(sourceSchema, destSchema)
+
+	// Set transform script
+	transformer.SetScript(`
+	return {
+		"string": source.binary,
+		"binary": source.binary,
+		"int": source.binary,
+		"uint": source.binary,
+		"float": source.binary,
+		"bool": source.binary
+	}
+`)
+
+	// Transform
+	rawData := `{
+	"binary": [ 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 ]
+}`
+	var sourceData map[string]interface{}
+	err = json.Unmarshal([]byte(rawData), &sourceData)
+	if err != nil {
+		t.Error(err)
+	}
+
+	results, err := transformer.Transform(nil, sourceData)
+	if err != nil {
+		t.Error(err)
+	}
+
+	if len(results) != 1 {
+		t.Fail()
+	}
+
+	result := results[0]
+
+	assert.Equal(t, "[0 1 2 3 4 5 6 7 8 9]", result["string"].(string))
+	assert.Equal(t, []uint8{0, 1, 2, 3, 4, 5, 6, 7, 8, 9}, result["binary"])
+	assert.Equal(t, int64(0), result["int"].(int64))
+	assert.Equal(t, uint64(0), result["uint"].(uint64))
+	assert.Equal(t, float64(0), result["float"].(float64))
+	assert.Equal(t, false, result["bool"].(bool))
+}
+
 func TestTransformer_Source_Integer(t *testing.T) {
 
 	sourceSchema := NewSchema()
@@ -535,6 +595,7 @@ func TestTransformer_Source_String(t *testing.T) {
 	transformer.SetScript(`
 	return {
 		"string": source.string,
+		"binary": source.string,
 		"int": source.string,
 		"uint": source.string,
 		"float": source.string,
@@ -566,6 +627,7 @@ func TestTransformer_Source_String(t *testing.T) {
 	result := results[0]
 
 	assert.Equal(t, "Brobridge", result["string"].(string))
+	assert.Equal(t, []byte("Brobridge"), result["binary"])
 	assert.Equal(t, int64(0), result["int"].(int64))
 	assert.Equal(t, uint64(0), result["uint"].(uint64))
 	assert.Equal(t, float64(0), result["float"].(float64))
