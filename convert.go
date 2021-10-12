@@ -190,7 +190,7 @@ func getStringValue(data interface{}) string {
 	case bool:
 		return fmt.Sprintf("%t", d)
 	case float64:
-		return fmt.Sprintf("%f", d)
+		return strconv.FormatFloat(d, 'f', -1, 64)
 	case time.Time:
 		return d.UTC().Format(time.RFC3339Nano)
 	default:

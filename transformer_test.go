@@ -567,7 +567,7 @@ func TestTransformer_Source_Float(t *testing.T) {
 
 	result := results[0]
 
-	assert.Equal(t, "11.150000", result["string"].(string))
+	assert.Equal(t, "11.15", result["string"].(string))
 	assert.Equal(t, int64(11), result["int"].(int64))
 	assert.Equal(t, uint64(11), result["uint"].(uint64))
 	assert.Equal(t, float64(11.15), result["float"].(float64))
