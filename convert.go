@@ -27,30 +27,35 @@ func getStandardValue(data interface{}) interface{} {
 
 func getValue(def *Definition, data interface{}) interface{} {
 
+	if !def.NotNull && data == nil {
+		return nil
+	}
+
 	v := getStandardValue(data)
 
 	// According to definition to convert value to what we want
 	switch def.Type {
 	case TYPE_INT64:
-		return getIntegerValue(v)
+		return getIntegerValue(def, v)
 	case TYPE_UINT64:
-		return getUnsignedIntegerValue(v)
+		return getUnsignedIntegerValue(def, v)
 	case TYPE_FLOAT64:
-		return getFloatValue(v)
+		return getFloatValue(def, v)
 	case TYPE_BOOLEAN:
-		return getBoolValue(v)
+		return getBoolValue(def, v)
 	case TYPE_STRING:
-		return getStringValue(v)
+		return getStringValue(def, v)
 	case TYPE_TIME:
 		return def.Info.(*types.Time).GetValue(v)
 	case TYPE_BINARY:
-		return getBinaryValue(v)
+		return getBinaryValue(def, v)
 	}
 
+	// Unknown type
 	return v
 }
 
-func getIntegerValue(data interface{}) int64 {
+func getIntegerValue(def *Definition, data interface{}) int64 {
 
 	switch d := data.(type) {
 	case int64:
@@ -79,7 +84,7 @@ func getIntegerValue(data interface{}) int64 {
 	return 0
 }
 
-func getUnsignedIntegerValue(data interface{}) uint64 {
+func getUnsignedIntegerValue(def *Definition, data interface{}) uint64 {
 
 	switch d := data.(type) {
 	case int64:
@@ -112,7 +117,7 @@ func getUnsignedIntegerValue(data interface{}) uint64 {
 	return 0
 }
 
-func getFloatValue(data interface{}) float64 {
+func getFloatValue(def *Definition, data interface{}) float64 {
 
 	switch d := data.(type) {
 	case int64:
@@ -141,7 +146,7 @@ func getFloatValue(data interface{}) float64 {
 	return 0
 }
 
-func getBoolValue(data interface{}) bool {
+func getBoolValue(def *Definition, data interface{}) bool {
 
 	switch d := data.(type) {
 	case int64:
@@ -178,7 +183,7 @@ func getBoolValue(data interface{}) bool {
 	return false
 }
 
-func getStringValue(data interface{}) string {
+func getStringValue(def *Definition, data interface{}) string {
 
 	switch d := data.(type) {
 	case int64:
@@ -198,7 +203,7 @@ func getStringValue(data interface{}) string {
 	}
 }
 
-func getBinaryValue(data interface{}) []byte {
+func getBinaryValue(def *Definition, data interface{}) []byte {
 
 	switch d := data.(type) {
 	case []byte:
@@ -214,7 +219,7 @@ func getBinaryValue(data interface{}) []byte {
 
 		val := make([]byte, len(arr))
 		for i, v := range arr {
-			val[i] = byte(getUnsignedIntegerValue(v))
+			val[i] = byte(getUnsignedIntegerValue(def, v))
 		}
 
 		return val

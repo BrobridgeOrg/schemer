@@ -11,6 +11,7 @@ type RawDefinition struct {
 	Type    string                 `mapstructure:"type"`
 	Subtype string                 `mapstructure:"subtype"`
 	Fields  map[string]interface{} `mapstructure:"fields"`
+	NotNull bool                   `mapstructure:"notNull"`
 }
 
 type Definition struct {
@@ -18,6 +19,7 @@ type Definition struct {
 	Type       ValueType
 	Subtype    ValueType
 	Info       interface{}
+	NotNull    bool
 }
 
 func NewDefinition(t ValueType) *Definition {
@@ -35,6 +37,7 @@ func UnmarshalDefinition(data interface{}, d *Definition) error {
 		return fmt.Errorf("Unknown defninition: %v", data)
 	}
 
+	d.NotNull = raw.NotNull
 	d.Type = ValueTypes[raw.Type]
 	switch d.Type {
 	case TYPE_ARRAY:
