@@ -1,6 +1,7 @@
 package schemer
 
 import (
+	"fmt"
 	"sync"
 )
 
@@ -45,6 +46,13 @@ func (t *Transformer) Transform(env map[string]interface{}, input map[string]int
 
 	ctx.vm.Set("env", env)
 	ctx.vm.Set("source", data)
+
+	// Native functions
+	console := ctx.vm.NewObject()
+	console.Set("log", func(args ...interface{}) {
+		fmt.Println(args...)
+	})
+	ctx.vm.Set("console", console)
 
 	//var fn func() map[string]interface{}
 	var fn func() interface{}
