@@ -3,6 +3,7 @@ package schemer
 import (
 	"fmt"
 	"sync"
+	"time"
 )
 
 type Transformer struct {
@@ -27,6 +28,54 @@ func NewTransformer(source *Schema, dest *Schema) *Transformer {
 	return t
 }
 
+func (t *Transformer) normalize(ctx *Context, schema *Schema, data map[string]interface{}) {
+
+	for fieldName, def := range schema.Fields {
+
+		val, ok := data[fieldName]
+		if !ok {
+			continue
+		}
+
+		if def.Type == TYPE_MAP {
+			t.normalize(ctx, def.Definition, val.(map[string]interface{}))
+			continue
+		}
+
+		if def.Type == TYPE_TIME {
+			v, _ := ctx.vm.New(ctx.vm.Get("Date").ToObject(ctx.vm), ctx.vm.ToValue(val.(time.Time).UnixNano()/1e6))
+			data[fieldName] = v
+			continue
+		}
+	}
+}
+
+func (t *Transformer) initializeContext(ctx *Context, env map[string]interface{}, schema *Schema, data map[string]interface{}) error {
+
+	if !ctx.IsReady() {
+		err := ctx.PreloadScript(t.script)
+		if err != nil {
+			return err
+		}
+	}
+
+	// Initializing environment varable
+	ctx.vm.Set("env", env)
+
+	// Native functions
+	console := ctx.vm.NewObject()
+	console.Set("log", func(args ...interface{}) {
+		fmt.Println(args...)
+	})
+	ctx.vm.Set("console", console)
+
+	// Normorlize for JavaScript
+	t.normalize(ctx, t.source, data)
+	ctx.vm.Set("source", data)
+
+	return nil
+}
+
 func (t *Transformer) Transform(env map[string]interface{}, input map[string]interface{}) ([]map[string]interface{}, error) {
 
 	var data map[string]interface{} = input
@@ -37,26 +86,15 @@ func (t *Transformer) Transform(env map[string]interface{}, input map[string]int
 	// Preparing context and runtime
 	ctx := t.ctxPool.Get().(*Context)
 	defer t.ctxPool.Put(ctx)
-	if !ctx.IsReady() {
-		err := ctx.PreloadScript(t.script)
-		if err != nil {
-			return nil, err
-		}
+
+	err := t.initializeContext(ctx, env, t.source, data)
+	if err != nil {
+		return nil, err
 	}
-
-	ctx.vm.Set("env", env)
-	ctx.vm.Set("source", data)
-
-	// Native functions
-	console := ctx.vm.NewObject()
-	console.Set("log", func(args ...interface{}) {
-		fmt.Println(args...)
-	})
-	ctx.vm.Set("console", console)
 
 	//var fn func() map[string]interface{}
 	var fn func() interface{}
-	err := ctx.vm.ExportTo(ctx.vm.Get("main"), &fn)
+	err = ctx.vm.ExportTo(ctx.vm.Get("main"), &fn)
 	if err != nil {
 		return nil, err
 	}
