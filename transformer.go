@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"sync"
 	"time"
+
+	"github.com/BrobridgeOrg/schemer/types"
 )
 
 type Transformer struct {
@@ -43,8 +45,10 @@ func (t *Transformer) normalize(ctx *Context, schema *Schema, data map[string]in
 		}
 
 		if def.Type == TYPE_TIME {
-			v, _ := ctx.vm.New(ctx.vm.Get("Date").ToObject(ctx.vm), ctx.vm.ToValue(val.(time.Time).UnixNano()/1e6))
-			data[fieldName] = v
+			if def.Info.(*types.Time).Percision != types.TIME_PERCISION_MICROSECOND {
+				v, _ := ctx.vm.New(ctx.vm.Get("Date").ToObject(ctx.vm), ctx.vm.ToValue(val.(time.Time).UnixNano()/1e6))
+				data[fieldName] = v
+			}
 			continue
 		}
 	}
@@ -69,7 +73,7 @@ func (t *Transformer) initializeContext(ctx *Context, env map[string]interface{}
 	})
 	ctx.vm.Set("console", console)
 
-	// Normorlize for JavaScript
+	// Normorlize data for JavaScript
 	t.normalize(ctx, t.source, data)
 	ctx.vm.Set("source", data)
 

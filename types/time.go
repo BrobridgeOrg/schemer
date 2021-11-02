@@ -21,6 +21,7 @@ const (
 var TimePercisions = map[string]TimePercision{
 	"second":      TIME_PERCISION_SECOND,
 	"millisecond": TIME_PERCISION_MILLISECOND,
+	"microsecond": TIME_PERCISION_MICROSECOND,
 }
 
 type Time struct {
@@ -34,7 +35,7 @@ func NewTime() *Time {
 func (t *Time) Parse(data interface{}) error {
 
 	props := data.(map[string]interface{})
-	if v, ok := props["percision"]; ok {
+	if v, ok := props["precision"]; ok {
 
 		p, ok := TimePercisions[v.(string)]
 		if !ok {
