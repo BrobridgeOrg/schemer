@@ -45,6 +45,12 @@ func (t *Transformer) normalize(ctx *Context, schema *Schema, data map[string]in
 		}
 
 		if def.Type == TYPE_TIME {
+
+			// Skip null
+			if val == nil {
+				continue
+			}
+
 			if def.Info.(*types.Time).Percision != types.TIME_PERCISION_MICROSECOND {
 				v, _ := ctx.vm.New(ctx.vm.Get("Date").ToObject(ctx.vm), ctx.vm.ToValue(val.(time.Time).UnixNano()/1e6))
 				data[fieldName] = v
