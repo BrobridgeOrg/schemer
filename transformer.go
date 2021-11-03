@@ -2,10 +2,12 @@ package schemer
 
 import (
 	"fmt"
+	"reflect"
 	"sync"
 	"time"
 
 	"github.com/BrobridgeOrg/schemer/types"
+	"github.com/dop251/goja"
 )
 
 type Transformer struct {
@@ -86,6 +88,148 @@ func (t *Transformer) initializeContext(ctx *Context, env map[string]interface{}
 	return nil
 }
 
+func (t *Transformer) handleArrayValue(arrayValue []interface{}) error {
+
+	for i, value := range arrayValue {
+		v := reflect.ValueOf(value)
+		switch v.Kind() {
+		/*
+			case reflect.Slice:
+				err := t.handleArrayValue(value.([]interface{}))
+				if err != nil {
+					return err
+				}
+		*/
+		case reflect.Map:
+			err := t.handleMapValue(value.(map[string]interface{}))
+			if err != nil {
+				return err
+			}
+		default:
+			// Convert Data object to time.Time
+			switch d := value.(type) {
+			case *goja.Object:
+				if value.(*goja.Object).ClassName() == "Date" {
+					arrayValue[i] = d.Export()
+				}
+			}
+		}
+	}
+
+	return nil
+}
+
+func (t *Transformer) handleMapValue(returnedValue map[string]interface{}) error {
+
+	for key, value := range returnedValue {
+		v := reflect.ValueOf(value)
+		switch v.Kind() {
+		/*
+			case reflect.Slice:
+				err := t.handleArrayValue(value.([]interface{}))
+				if err != nil {
+					return err
+				}
+		*/
+		case reflect.Map:
+			err := t.handleMapValue(value.(map[string]interface{}))
+			if err != nil {
+				return err
+			}
+		default:
+			// Convert Data object to time.Time
+			switch d := value.(type) {
+			case *goja.Object:
+				if value.(*goja.Object).ClassName() == "Date" {
+					returnedValue[key] = d.Export()
+				}
+			}
+		}
+	}
+
+	return nil
+}
+
+func (t *Transformer) normalizeValue(v map[string]interface{}) (map[string]interface{}, error) {
+
+	var val map[string]interface{}
+
+	// Normalize for destination schema if it exists
+	if t.dest != nil {
+		val = t.dest.Normalize(v)
+	} else {
+
+		// Inherit source schema
+		val = t.source.Normalize(v)
+	}
+
+	return val, nil
+}
+
+func (t *Transformer) runScript(ctx *Context) ([]map[string]interface{}, error) {
+
+	var fn func() interface{}
+	err := ctx.vm.ExportTo(ctx.vm.Get("main"), &fn)
+	if err != nil {
+		return nil, err
+	}
+
+	result := fn()
+	if result == nil {
+		return nil, nil
+	}
+
+	v := reflect.ValueOf(result)
+	switch v.Kind() {
+	case reflect.Slice:
+
+		v := result.([]interface{})
+
+		// Prepare array
+		returnedValues := make([]map[string]interface{}, len(v))
+
+		for i, d := range v {
+			v := d.(map[string]interface{})
+
+			// Deal with JavaScript Object
+			err := t.handleMapValue(v)
+			if err != nil {
+				return nil, err
+			}
+
+			// Normalize returned data based on schema
+			val, err := t.normalizeValue(v)
+			if err != nil {
+				return nil, err
+			}
+
+			returnedValues[i] = val
+		}
+
+		return returnedValues, nil
+
+	default:
+
+		v := result.(map[string]interface{})
+
+		// Deal with JavaScript Object
+		err := t.handleMapValue(v)
+		if err != nil {
+			return nil, err
+		}
+
+		// Normalize returned data based on schema
+		val, err := t.normalizeValue(v)
+		if err != nil {
+			return nil, err
+		}
+
+		return []map[string]interface{}{
+			val,
+		}, nil
+	}
+}
+
 func (t *Transformer) Transform(env map[string]interface{}, input map[string]interface{}) ([]map[string]interface{}, error) {
 
 	var data map[string]interface{} = input
@@ -102,51 +246,17 @@ func (t *Transformer) Transform(env map[string]interface{}, input map[string]int
 		return nil, err
 	}
 
-	//var fn func() map[string]interface{}
-	var fn func() interface{}
-	err = ctx.vm.ExportTo(ctx.vm.Get("main"), &fn)
+	// Run script to process data
+	result, err := t.runScript(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	result := fn()
 	if result == nil {
 		return nil, nil
 	}
 
-	// Result is an object
-	if v, ok := result.(map[string]interface{}); ok {
-
-		var val map[string]interface{} = v
-		if t.dest != nil {
-			val = t.dest.Normalize(v)
-		}
-
-		// Normalized for destination schema then returning result
-		return []map[string]interface{}{
-			val,
-		}, nil
-	} else if v, ok := result.([]interface{}); ok {
-		// Result is an array
-
-		returnedValue := make([]map[string]interface{}, len(v))
-		for i, d := range v {
-
-			if v, ok := d.(map[string]interface{}); ok {
-
-				var val map[string]interface{} = v
-				if t.dest != nil {
-					val = t.dest.Normalize(v)
-				}
-
-				returnedValue[i] = val
-			}
-		}
-
-		return returnedValue, nil
-	}
-
-	return nil, nil
+	return result, nil
 }
 
 func (t *Transformer) SetScript(script string) {

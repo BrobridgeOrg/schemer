@@ -752,6 +752,46 @@ func TestTransformer_Source_Time(t *testing.T) {
 	assert.Equal(t, int64(1595182568000000000), result["microTime"].(time.Time).UnixNano())
 }
 
+func TestTransformer_Source_Time_Dest_Empty(t *testing.T) {
+
+	sourceSchema := NewSchema()
+	err := UnmarshalJSON([]byte(testSource), sourceSchema)
+	if err != nil {
+		t.Error(err)
+	}
+
+	// Create transformer
+	transformer := NewTransformer(sourceSchema, nil)
+
+	// Set transform script
+	transformer.SetScript(`
+	return source;
+`)
+
+	// Transform
+	rawData := `{
+	"time": 1595182568
+}`
+	var sourceData map[string]interface{}
+	err = json.Unmarshal([]byte(rawData), &sourceData)
+	if err != nil {
+		t.Error(err)
+	}
+
+	results, err := transformer.Transform(nil, sourceData)
+	if err != nil {
+		t.Error(err)
+	}
+
+	if len(results) != 1 {
+		t.Fail()
+	}
+
+	result := results[0]
+
+	assert.Equal(t, int64(1595182568), result["time"].(time.Time).Unix())
+}
+
 func TestTransformer_Source_MicroTime(t *testing.T) {
 
 	sourceSchema := NewSchema()
