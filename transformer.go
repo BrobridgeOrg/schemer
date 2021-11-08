@@ -290,6 +290,19 @@ func (t *Transformer) SetSourceSchema(schema *Schema) {
 	t.source = schema
 }
 
+func (t *Transformer) GetSourceSchema() *Schema {
+	return t.source
+}
+
 func (t *Transformer) SetDestinationSchema(schema *Schema) {
 	t.dest = schema
+}
+
+func (t *Transformer) GetDestinationSchema() *Schema {
+
+	if t.source != nil && t.dest == nil {
+		return t.source
+	}
+
+	return t.dest
 }
