@@ -160,10 +160,12 @@ func (t *Transformer) normalizeValue(v map[string]interface{}) (map[string]inter
 	// Normalize for destination schema if it exists
 	if t.dest != nil {
 		val = t.dest.Normalize(v)
-	} else {
+	} else if t.source != nil {
 
 		// Inherit source schema
 		val = t.source.Normalize(v)
+	} else {
+		val = v
 	}
 
 	return val, nil

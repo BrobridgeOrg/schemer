@@ -163,6 +163,55 @@ func TestTransformerWithoutSourceSchema(t *testing.T) {
 	assert.Equal(t, float64(11.15), result["float"].(float64))
 	assert.Equal(t, false, result["bool"].(bool))
 }
+
+func TestTransformerWithoutSchema(t *testing.T) {
+
+	// Create transformer
+	transformer := NewTransformer(nil, nil)
+
+	// Set transform script
+	transformer.SetScript(`
+	return {
+		string: source.string + 'TEST',
+		int: source.int + 1,
+		uint: source.uint + 1,
+		float: source.float,
+		bool: source.bool
+	}
+`)
+
+	// Transform
+	rawData := `{
+	"string": "Brobridge",
+	"int": -9527,
+	"uint": 9527,
+	"float": 11.15,
+	"bool": false
+}`
+	var sourceData map[string]interface{}
+	err := json.Unmarshal([]byte(rawData), &sourceData)
+	if err != nil {
+		t.Error(err)
+	}
+
+	returnedValue, err := transformer.Transform(nil, sourceData)
+	if err != nil {
+		t.Error(err)
+	}
+
+	if len(returnedValue) != 1 {
+		t.Fail()
+	}
+
+	result := returnedValue[0]
+
+	assert.Equal(t, "Brobridge"+"TEST", result["string"].(string))
+	assert.Equal(t, int64(-9527)+1, result["int"].(int64))
+	assert.Equal(t, int64(9527)+1, result["uint"].(int64))
+	assert.Equal(t, float64(11.15), result["float"].(float64))
+	assert.Equal(t, false, result["bool"].(bool))
+}
+
 func TestTransformerEnv(t *testing.T) {
 
 	testSourceSchema := NewSchema()
