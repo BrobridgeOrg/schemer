@@ -82,7 +82,10 @@ func (t *Transformer) initializeContext(ctx *Context, env map[string]interface{}
 	ctx.vm.Set("console", console)
 
 	// Normorlize data for JavaScript
-	t.normalize(ctx, t.source, data)
+	if t.source != nil {
+		t.normalize(ctx, t.source, data)
+	}
+
 	ctx.vm.Set("source", data)
 
 	return nil
