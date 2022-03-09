@@ -703,7 +703,7 @@ func TestTransformer_Source_String(t *testing.T) {
 		"float": source.string,
 		"bool": source.string,
 		"time": "2020-07-19T18:16:08Z",
-		"microTime": "2020-07-19T18:16:08Z"
+		"microTime": "2020-07-19 18:16:08.1234567"
 	}
 `)
 
@@ -735,7 +735,7 @@ func TestTransformer_Source_String(t *testing.T) {
 	assert.Equal(t, float64(0), result["float"].(float64))
 	assert.Equal(t, false, result["bool"].(bool))
 	assert.Equal(t, int64(1595182568), result["time"].(time.Time).Unix())
-	assert.Equal(t, int64(1595182568000000000), result["microTime"].(time.Time).UnixNano())
+	assert.Equal(t, int64(1595182568123456700), result["microTime"].(time.Time).UnixNano())
 }
 
 func TestTransformer_Source_Bool(t *testing.T) {

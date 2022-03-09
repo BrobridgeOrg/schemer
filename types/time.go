@@ -2,6 +2,7 @@ package types
 
 import (
 	"fmt"
+	"strings"
 	"time"
 )
 
@@ -78,7 +79,20 @@ func (t *Time) GetValue(data interface{}) time.Time {
 	case uint64:
 		return t.getValueByPercision(int64(d))
 	case string:
-		t, _ := time.Parse(time.RFC3339Nano, d)
+
+		t, err := time.Parse(time.RFC3339Nano, d)
+		if err != nil {
+
+			str := strings.Replace(d, " ", "T", 1)
+
+			if d[len(d)-1:] != "Z" {
+				t, _ = time.Parse(time.RFC3339Nano, str+"Z")
+			} else {
+				t, _ = time.Parse(time.RFC3339Nano, str)
+			}
+
+		}
+
 		return t
 	case float64:
 		return t.getValueByPercision(int64(d))
