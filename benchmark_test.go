@@ -70,7 +70,7 @@ func BenchmarkTransformer(b *testing.B) {
 	transformer := NewTransformer(testSourceSchema, testDestSchema)
 
 	// Set transform script
-	transformer.SetScript(`
+	err = transformer.SetScript(`
 	return {
 		string: source.string + 'TEST',
 		int: source.int + 1,
@@ -79,6 +79,9 @@ func BenchmarkTransformer(b *testing.B) {
 		bool: source.bool
 	}
 `)
+	if err != nil {
+		b.Fatal(err)
+	}
 
 	// Transform
 	rawData := `{

@@ -14,6 +14,7 @@ type Transformer struct {
 	source  *Schema
 	dest    *Schema
 	script  string
+	program *goja.Program
 	ctxPool sync.Pool
 }
 
@@ -28,6 +29,8 @@ func NewTransformer(source *Schema, dest *Schema) *Transformer {
 	t.ctxPool.New = func() interface{} {
 		return NewContext()
 	}
+
+	t.program, _ = goja.Compile("transformer", t.script, false)
 
 	return t
 }
@@ -65,7 +68,7 @@ func (t *Transformer) normalize(ctx *Context, schema *Schema, data map[string]in
 func (t *Transformer) initializeContext(ctx *Context, env map[string]interface{}, schema *Schema, data map[string]interface{}) error {
 
 	if !ctx.IsReady() {
-		err := ctx.PreloadScript(t.script)
+		err := ctx.PreloadScript(t.program)
 		if err != nil {
 			return err
 		}
@@ -264,7 +267,7 @@ func (t *Transformer) Transform(env map[string]interface{}, input map[string]int
 	return result, nil
 }
 
-func (t *Transformer) SetScript(script string) {
+func (t *Transformer) SetScript(script string) error {
 	t.script = `
 function run() {` + script + `}
 function scanStruct(obj) {
@@ -289,6 +292,15 @@ function main() {
 	return v
 }
 `
+
+	p, err := goja.Compile("transformer", t.script, false)
+	if err != nil {
+		return err
+	}
+
+	t.program = p
+
+	return nil
 }
 
 func (t *Transformer) SetSourceSchema(schema *Schema) {

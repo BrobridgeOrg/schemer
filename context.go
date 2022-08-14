@@ -1,6 +1,8 @@
 package schemer
 
-import "github.com/dop251/goja"
+import (
+	"github.com/dop251/goja"
+)
 
 type Context struct {
 	vm     *goja.Runtime
@@ -15,8 +17,8 @@ func NewContext() *Context {
 	}
 }
 
-func (ctx *Context) PreloadScript(script string) error {
-	_, err := ctx.vm.RunString(script)
+func (ctx *Context) PreloadScript(p *goja.Program) error {
+	_, err := ctx.vm.RunProgram(p)
 	if err != nil {
 		return err
 	}
