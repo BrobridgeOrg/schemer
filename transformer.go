@@ -1,7 +1,6 @@
 package schemer
 
 import (
-	"fmt"
 	"reflect"
 	"sync"
 	"time"
@@ -76,13 +75,6 @@ func (t *Transformer) initializeContext(ctx *Context, env map[string]interface{}
 
 	// Initializing environment varable
 	ctx.vm.Set("env", env)
-
-	// Native functions
-	console := ctx.vm.NewObject()
-	console.Set("log", func(args ...interface{}) {
-		fmt.Println(args...)
-	})
-	ctx.vm.Set("console", console)
 
 	// Normorlize data for JavaScript
 	if t.source != nil {

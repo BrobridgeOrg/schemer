@@ -50,6 +50,31 @@ var testDest = `{
 	}
 }`
 
+func TestTransformerScript(t *testing.T) {
+
+	testSourceSchema := NewSchema()
+	err := UnmarshalJSON([]byte(testSource), testSourceSchema)
+	if err != nil {
+		t.Error(err)
+	}
+
+	testDestSchema := NewSchema()
+	err = UnmarshalJSON([]byte(testDest), testDestSchema)
+	if err != nil {
+		t.Error(err)
+	}
+
+	// Create transformer
+	transformer := NewTransformer(testSourceSchema, testDestSchema)
+
+	// Set transform script
+	err = transformer.SetScript(`
+		Invalid script
+`)
+	//	t.Log(err)
+	assert.NotNil(t, err)
+}
+
 func TestTransformer(t *testing.T) {
 
 	testSourceSchema := NewSchema()

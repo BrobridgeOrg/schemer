@@ -1,6 +1,8 @@
 package schemer
 
 import (
+	"fmt"
+
 	"github.com/dop251/goja"
 )
 
@@ -11,10 +13,24 @@ type Context struct {
 }
 
 func NewContext() *Context {
-	return &Context{
+	ctx := &Context{
 		vm:     goja.New(),
 		output: make(map[string]interface{}),
 	}
+
+	ctx.initialize()
+
+	return ctx
+}
+
+func (ctx *Context) initialize() {
+
+	// Native functions
+	console := ctx.vm.NewObject()
+	console.Set("log", func(args ...interface{}) {
+		fmt.Println(args...)
+	})
+	ctx.vm.Set("console", console)
 }
 
 func (ctx *Context) PreloadScript(p *goja.Program) error {
