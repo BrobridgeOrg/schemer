@@ -1040,3 +1040,66 @@ func TestTransformer_Source_Null(t *testing.T) {
 	assert.Equal(t, nil, result["time"])
 	assert.Equal(t, nil, result["microTime"])
 }
+
+func TestTransformer_Source_TimeString(t *testing.T) {
+
+	sourceSchema := NewSchema()
+	err := UnmarshalJSON([]byte(testSource), sourceSchema)
+	if err != nil {
+		t.Error(err)
+	}
+
+	destSchema := NewSchema()
+	err = UnmarshalJSON([]byte(testDest), destSchema)
+	if err != nil {
+		t.Error(err)
+	}
+
+	// Create transformer
+	transformer := NewTransformer(sourceSchema, destSchema)
+
+	// Set transform script
+	transformer.SetScript(`
+	return {
+		"string": source.string,
+		"binary": source.string,
+		"int": source.string,
+		"uint": source.string,
+		"float": source.string,
+		"bool": source.string,
+		"time": source.time,
+		"microTime": "2020-07-19 18:16:08.1234567"
+	}
+`)
+
+	// Transform
+	rawData := `{
+	"string": "Brobridge",
+	"time": "2020-07-19T18:16:08.96Z"
+}`
+	var sourceData map[string]interface{}
+	err = json.Unmarshal([]byte(rawData), &sourceData)
+	if err != nil {
+		t.Error(err)
+	}
+
+	results, err := transformer.Transform(nil, sourceData)
+	if err != nil {
+		t.Error(err)
+	}
+
+	if len(results) != 1 {
+		t.Fail()
+	}
+
+	result := results[0]
+
+	assert.Equal(t, "Brobridge", result["string"].(string))
+	assert.Equal(t, []byte("Brobridge"), result["binary"])
+	assert.Equal(t, int64(0), result["int"].(int64))
+	assert.Equal(t, uint64(0), result["uint"].(uint64))
+	assert.Equal(t, float64(0), result["float"].(float64))
+	assert.Equal(t, false, result["bool"].(bool))
+	assert.Equal(t, int64(1595182568), result["time"].(time.Time).Unix())
+	assert.Equal(t, int64(1595182568123456700), result["microTime"].(time.Time).UnixNano())
+}

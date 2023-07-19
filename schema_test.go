@@ -140,3 +140,91 @@ func TestSchemaScan(t *testing.T) {
 	assert.Equal(t, TYPE_STRING, teamValue.Definition.Type)
 	assert.Equal(t, "product", teamValue.Data.(string))
 }
+
+func TestSchema_MSSQL_Types(t *testing.T) {
+
+	definition := `{
+	"id": { "type": "uint" },
+	"name": { "type": "string" },
+	"age": { "type": "int" },
+	"salary": { "type": "float" },
+	"is_active": { "type": "bool" },
+	"birth_date": { "type": "time" },
+	"join_date": { "type": "time" },
+	"last_updated": { "type": "time" },
+	"phone_number": { "type": "string" },
+	"email": { "type": "string" },
+	"address": { "type": "string" },
+	"notes": { "type": "string" },
+	"photo": { "type": "binary" },
+	"income": { "type": "float" },
+	"unique_id": { "type": "string" },
+	"xml_data": { "type": "string" },
+	"json_data": { "type": "string" },
+	"geometry_data": { "type": "binary" },
+	"geography_data": { "type": "binary" },
+	"created_at": { "type": "time" },
+	"tinyint_col": { "type": "int" },
+	"bigint_col": { "type": "int" },
+	"real_col": { "type": "float" },
+	"numeric_col": { "type": "float" },
+	"smallmoney_col": { "type": "float" },
+	"ntext_col": { "type": "string" },
+	"binary_col": { "type": "binary" },
+	"image_col": { "type": "binary" },
+	"datetime2_col": { "type": "time" },
+	"time_col": { "type": "time" },
+	"timestamp_col": { "type": "time" },
+	"hierarchyid_col": { "type": "any" }
+}`
+
+	recordSource := `{
+	"address": "123 Main St",
+	"age": 30,
+	"bigint_col": 1234567890,
+	"binary_col": "ASNFAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=",
+	"birth_date": "1990-05-15T00:00:00Z",
+	"created_at": "2023-05-05T15:45:00-07:00",
+	"datetime2_col": "2023-05-05T12:00:00Z",
+	"email": "john@example.com",
+	"geography_data": "5hAAAAEMqvHSTWKAUsBeS8gHPVtEQA==",
+	"geometry_data": "AAAAAAEMAAAAAAAA8D8AAAAAAADwPw==",
+	"hierarchyid_col": "WsA=",
+	"id": 2,
+	"image_col": "/+7dzA==",
+	"income": 5000.75,
+	"is_active": true,
+	"join_date": "2022-01-01T09:00:00Z",
+	"json_data": "{\"key\": \"value\"}",
+	"last_updated": "2023-05-05T12:30:00Z",
+	"name": "John Doe",
+	"notes": "Some notes",
+	"ntext_col": "Some text",
+	"numeric_col": "MTIzNDUuNjc=",
+	"phone_number": "1234567890",
+	"photo": "ASNFZ4mrze8=",
+	"real_col": 3.140000104904175,
+	"salary": "MjUwMC41MA==",
+	"smallmoney_col": "MTAwLjI1MDA=",
+	"time_col": "0001-01-01T15:30:00Z",
+	"timestamp_col": "AAAAAAAAB9E=",
+	"tinyint_col": 5,
+	"unique_id": "/xmWb4aLEdC0LQDAT8lk/w==",
+	"xml_data": "<root><data>Some XML data</data></root>"
+}`
+
+	// Initializing schema
+	schema := NewSchema()
+	err := UnmarshalJSON([]byte(definition), schema)
+	if err != nil {
+		t.Error(err)
+	}
+
+	// Initializing record
+	var rawData map[string]interface{}
+	json.Unmarshal([]byte(recordSource), &rawData)
+
+	// Scan raw data
+	_ = schema.Scan(rawData)
+
+}
