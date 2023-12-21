@@ -52,15 +52,22 @@ func (s *Schema) getDefinition(parts []string) *Definition {
 
 	var def *Definition
 	fields := s.Fields
-	for _, path := range parts {
-		d, ok := fields[path]
+	for _, entry := range parts {
+
+		// Parse key and index
+		key, _ := parsePathEntry(entry)
+
+		// Check if we have a definition for this key
+		d, ok := fields[key]
 		if !ok {
 			return nil
 		}
 
 		def = d
 
-		if d.Type == TYPE_MAP {
+		if def.Type == TYPE_MAP {
+			fields = def.Definition.Fields
+		} else if def.Type == TYPE_ARRAY && def.Subtype == TYPE_MAP {
 			fields = def.Definition.Fields
 		}
 	}

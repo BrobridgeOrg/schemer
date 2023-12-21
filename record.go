@@ -1,5 +1,7 @@
 package schemer
 
+import "reflect"
+
 type Record struct {
 	schema *Schema
 	raw    map[string]interface{}
@@ -35,9 +37,16 @@ func (r *Record) getValue(parts []string) interface{} {
 			return nil
 		}
 
+		key, index := parsePathEntry(p)
+
 		if v, ok := obj.(map[string]interface{}); ok {
-			obj = v[p]
+			obj = v[key]
 			val = obj
+
+			if reflect.TypeOf(obj).Kind() == reflect.Slice && index != -1 {
+				obj = obj.([]interface{})[index]
+				val = obj
+			}
 
 			continue
 		}

@@ -73,6 +73,14 @@ func TestSchemaScan(t *testing.T) {
 			"title": { "type": "string" },
 			"team": { "type": "string" }
 		}
+	},
+	"attachments": {
+		"type": "array",
+		"subtype": "map",
+		"fields": {
+			"filename": { "type": "string" },
+			"size": { "type": "int" }
+		}
 	}
 }`
 
@@ -85,7 +93,11 @@ func TestSchemaScan(t *testing.T) {
 	"attributes": {
 		"title": "Architect",
 		"team": "product"
-	}
+	},
+	"attachments": [
+		{ "filename": "file1.txt", "size": 123 },
+		{ "filename": "file2.txt", "size": 456 }
+	]
 }`
 
 	// Initializing schema
@@ -139,6 +151,18 @@ func TestSchemaScan(t *testing.T) {
 	teamValue := record.GetValue("attributes.team")
 	assert.Equal(t, TYPE_STRING, teamValue.Definition.Type)
 	assert.Equal(t, "product", teamValue.Data.(string))
+
+	// field: attachments
+	attachmentsValue := record.GetValue("attachments")
+	assert.Equal(t, TYPE_ARRAY, attachmentsValue.Definition.Type)
+
+	aFilenameValue := record.GetValue("attachments[0].filename")
+	assert.Equal(t, TYPE_STRING, aFilenameValue.Definition.Type)
+	assert.Equal(t, "file1.txt", aFilenameValue.Data)
+
+	aSizeValue := record.GetValue("attachments[0].size")
+	assert.Equal(t, TYPE_INT64, aSizeValue.Definition.Type)
+	assert.Equal(t, int64(123), aSizeValue.Data)
 }
 
 func TestSchema_MSSQL_Types(t *testing.T) {

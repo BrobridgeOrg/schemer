@@ -42,6 +42,13 @@ func UnmarshalDefinition(data interface{}, d *Definition) error {
 	switch d.Type {
 	case TYPE_ARRAY:
 		d.Subtype = ValueTypes[raw.Subtype]
+		s := NewSchema()
+		err = Unmarshal(raw.Fields, s)
+		if err != nil {
+			return err
+		}
+
+		d.Definition = s
 	case TYPE_MAP:
 		s := NewSchema()
 		err = Unmarshal(raw.Fields, s)
