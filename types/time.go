@@ -69,16 +69,20 @@ func (t *Time) getValueByPercision(d int64) time.Time {
 	return time.Unix(d, 0)
 }
 
-func (t *Time) GetValue(data interface{}) time.Time {
+func (t *Time) GetValue(data interface{}) (time.Time, error) {
 
 	switch d := data.(type) {
 	case time.Time:
-		return d
+		return d, nil
 	case int64:
-		return t.getValueByPercision(d)
+		return t.getValueByPercision(d), nil
 	case uint64:
-		return t.getValueByPercision(int64(d))
+		return t.getValueByPercision(int64(d)), nil
 	case string:
+
+		if len(d) == 0 {
+			return time.Unix(0, 0), ErrEmptyValue
+		}
 
 		t, err := time.Parse(time.RFC3339Nano, d)
 		if err != nil {
@@ -93,10 +97,10 @@ func (t *Time) GetValue(data interface{}) time.Time {
 
 		}
 
-		return t
+		return t, nil
 	case float64:
-		return t.getValueByPercision(int64(d))
+		return t.getValueByPercision(int64(d)), nil
 	}
 
-	return time.Unix(0, 0)
+	return time.Unix(0, 0), nil
 }

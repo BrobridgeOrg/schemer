@@ -46,7 +46,12 @@ func getValue(def *Definition, data interface{}) interface{} {
 	case TYPE_STRING:
 		return getStringValue(def, v)
 	case TYPE_TIME:
-		return def.Info.(*types.Time).GetValue(v)
+		t, err := def.Info.(*types.Time).GetValue(v)
+		if err == types.ErrEmptyValue {
+			return nil
+		}
+
+		return t
 	case TYPE_BINARY:
 		return getBinaryValue(def, v)
 	}
