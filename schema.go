@@ -86,7 +86,7 @@ func (s *Schema) normalize(schema *Schema, data map[string]interface{}) map[stri
 			continue
 		}
 
-		if def.Type == TYPE_MAP {
+		if def.Type == TYPE_MAP && val != nil {
 			result[fieldName] = s.normalize(def.Definition, val.(map[string]interface{}))
 			continue
 		}
