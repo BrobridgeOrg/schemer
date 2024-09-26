@@ -20,6 +20,10 @@ func parsePathEntry(entry string) (string, int) {
 			return key, -1
 		}
 
+		if idx < 0 {
+			return key, -1
+		}
+
 		index = idx
 	}
 

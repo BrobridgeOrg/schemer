@@ -44,7 +44,7 @@ func (t *Transformer) normalize(ctx *Context, schema *Schema, data map[string]in
 		}
 
 		if def.Type == TYPE_MAP {
-			t.normalize(ctx, def.Definition, val.(map[string]interface{}))
+			t.normalize(ctx, def.Schema, val.(map[string]interface{}))
 			continue
 		}
 

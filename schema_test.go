@@ -51,10 +51,10 @@ func TestSchemaUnmarshal(t *testing.T) {
 	assert.Equal(t, TYPE_ANY, schema.Fields["attached"].Type)
 
 	// Check array type
-	assert.Equal(t, TYPE_STRING, schema.Fields["tags"].Subtype)
+	assert.Equal(t, TYPE_STRING, schema.Fields["tags"].Subtype.Type)
 
 	// Check map type
-	attrs := schema.Fields["attributes"].Definition
+	attrs := schema.Fields["attributes"].Schema
 	assert.Equal(t, TYPE_STRING, attrs.Fields["title"].Type)
 	assert.Equal(t, TYPE_STRING, attrs.Fields["team"].Type)
 }
@@ -155,12 +155,15 @@ func TestSchemaScan(t *testing.T) {
 	// field: attachments
 	attachmentsValue := record.GetValue("attachments")
 	assert.Equal(t, TYPE_ARRAY, attachmentsValue.Definition.Type)
+	assert.Equal(t, TYPE_MAP, attachmentsValue.Definition.Subtype.Type)
 
 	aFilenameValue := record.GetValue("attachments[0].filename")
+	assert.NotNil(t, aFilenameValue)
 	assert.Equal(t, TYPE_STRING, aFilenameValue.Definition.Type)
 	assert.Equal(t, "file1.txt", aFilenameValue.Data)
 
 	aSizeValue := record.GetValue("attachments[0].size")
+	assert.NotNil(t, aSizeValue)
 	assert.Equal(t, TYPE_INT64, aSizeValue.Definition.Type)
 	assert.Equal(t, int64(123), aSizeValue.Data)
 }

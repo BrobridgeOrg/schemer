@@ -1,12 +1,17 @@
 package schemer
 
 import (
+	"encoding/json"
 	"fmt"
 	"reflect"
 	"strconv"
 	"time"
 
 	"github.com/BrobridgeOrg/schemer/types"
+)
+
+var (
+	ErrInvalidType = fmt.Errorf("Invalid type")
 )
 
 func getStandardValue(data interface{}) interface{} {
@@ -25,10 +30,10 @@ func getStandardValue(data interface{}) interface{} {
 	return data
 }
 
-func getValue(def *Definition, data interface{}) interface{} {
+func getValue(def *Definition, data interface{}) (interface{}, error) {
 
 	if !def.NotNull && data == nil {
-		return nil
+		return nil, ErrInvalidType
 	}
 
 	v := getStandardValue(data)
@@ -48,192 +53,240 @@ func getValue(def *Definition, data interface{}) interface{} {
 	case TYPE_TIME:
 		t, err := def.Info.(*types.Time).GetValue(v)
 		if err == types.ErrEmptyValue {
-			return nil
+			return nil, ErrInvalidType
 		}
 
-		return t
+		return t, nil
 	case TYPE_BINARY:
 		return getBinaryValue(def, v)
+	case TYPE_MAP:
+		return getMapValue(def, v)
+	case TYPE_ARRAY:
+		return getArrayValue(def, v)
+	case TYPE_ANY:
+		return v, nil
 	}
 
 	// Unknown type
-	return v
+	return v, nil
 }
 
-func getIntegerValue(def *Definition, data interface{}) int64 {
+func getIntegerValue(def *Definition, data interface{}) (int64, error) {
 
 	switch d := data.(type) {
 	case int64:
-		return d
+		return d, nil
 	case uint64:
-		return int64(d)
+		return int64(d), nil
 	case string:
 		result, err := strconv.ParseInt(d, 10, 64)
 		if err != nil {
-			return 0
+			return 0, ErrInvalidType
 		}
 
-		return result
+		return result, nil
 	case bool:
 		if d {
-			return int64(1)
+			return int64(1), nil
 		} else {
-			return int64(0)
+			return int64(0), nil
 		}
 	case float64:
-		return int64(d)
+		return int64(d), nil
 	case time.Time:
-		return d.Unix()
+		return d.Unix(), nil
 	}
 
-	return 0
+	return 0, nil
 }
 
-func getUnsignedIntegerValue(def *Definition, data interface{}) uint64 {
+func getUnsignedIntegerValue(def *Definition, data interface{}) (uint64, error) {
 
 	switch d := data.(type) {
 	case int64:
 		if d > 0 {
-			return uint64(d)
+			return uint64(d), nil
 		}
 
-		return 0
+		return 0, ErrInvalidType
 	case uint64:
-		return d
+		return d, nil
 	case string:
 		result, err := strconv.ParseUint(d, 10, 64)
 		if err != nil {
-			return 0
+			return 0, ErrInvalidType
 		}
 
-		return result
+		return result, nil
 	case bool:
 		if d {
-			return uint64(1)
+			return uint64(1), nil
 		} else {
-			return uint64(0)
+			return uint64(0), nil
 		}
 	case float64:
-		return uint64(d)
+		return uint64(d), nil
 	case time.Time:
-		return uint64(d.Unix())
+		return uint64(d.Unix()), nil
 	}
 
-	return 0
+	return 0, nil
 }
 
-func getFloatValue(def *Definition, data interface{}) float64 {
+func getFloatValue(def *Definition, data interface{}) (float64, error) {
 
 	switch d := data.(type) {
 	case int64:
-		return float64(d)
+		return float64(d), nil
 	case uint64:
-		return float64(d)
+		return float64(d), nil
 	case string:
 		result, err := strconv.ParseFloat(d, 64)
 		if err != nil {
-			return 0
+			return 0, ErrInvalidType
 		}
 
-		return result
+		return result, nil
 	case bool:
 		if d {
-			return float64(1)
+			return float64(1), nil
 		} else {
-			return float64(0)
+			return float64(0), nil
 		}
 	case float64:
-		return d
+		return d, nil
 	case time.Time:
-		return float64(d.Unix())
+		return float64(d.Unix()), nil
 	}
 
-	return 0
+	return 0, nil
 }
 
-func getBoolValue(def *Definition, data interface{}) bool {
+func getBoolValue(def *Definition, data interface{}) (bool, error) {
 
 	switch d := data.(type) {
 	case int64:
 		if d > 0 {
-			return true
+			return true, nil
 		} else {
-			return false
+			return false, nil
 		}
 	case uint64:
 		if d > 0 {
-			return true
+			return true, nil
 		} else {
-			return false
+			return false, nil
 		}
 	case string:
 		result, err := strconv.ParseBool(d)
 		if err != nil {
-			return false
+			return false, ErrInvalidType
 		}
 
-		return result
+		return result, nil
 	case bool:
-		return d
+		return d, nil
 	case float64:
 		if d > 0 {
-			return true
+			return true, nil
 		} else {
-			return false
+			return false, nil
 		}
 	case time.Time:
-		return true
+		return true, nil
 	}
 
-	return false
+	return false, nil
 }
 
-func getStringValue(def *Definition, data interface{}) string {
+func getStringValue(def *Definition, data interface{}) (string, error) {
 
 	switch d := data.(type) {
 	case int64:
-		return fmt.Sprintf("%d", d)
+		return fmt.Sprintf("%d", d), nil
 	case uint64:
-		return fmt.Sprintf("%d", d)
+		return fmt.Sprintf("%d", d), nil
 	case string:
-		return d
+		return d, nil
 	case bool:
-		return fmt.Sprintf("%t", d)
+		return fmt.Sprintf("%t", d), nil
 	case float64:
-		return strconv.FormatFloat(d, 'f', -1, 64)
+		return strconv.FormatFloat(d, 'f', -1, 64), nil
 	case time.Time:
-		return d.UTC().Format(time.RFC3339Nano)
+		return d.UTC().Format(time.RFC3339Nano), nil
+	case map[string]interface{}:
+		jsonData, _ := json.Marshal(d)
+		return string(jsonData), ErrInvalidType
+	case []interface{}:
+		jsonData, _ := json.Marshal(d)
+		return string(jsonData), ErrInvalidType
 	default:
-		return fmt.Sprintf("%v", d)
+		return fmt.Sprintf("%v", d), nil
 	}
 }
 
-func getBinaryValue(def *Definition, data interface{}) []byte {
+func getBinaryValue(def *Definition, data interface{}) ([]byte, error) {
 
 	switch d := data.(type) {
 	case []byte:
-		return d
+		return d, nil
 	case string:
-		return []byte(d)
-	default:
-
-		arr, ok := data.([]interface{})
-		if !ok {
-			return []byte("")
+		return []byte(d), nil
+	case []interface{}:
+		val := make([]byte, len(d))
+		for i, v := range d {
+			b, _ := getUnsignedIntegerValue(def, v)
+			val[i] = byte(b)
 		}
 
-		val := make([]byte, len(arr))
-		for i, v := range arr {
-			val[i] = byte(getUnsignedIntegerValue(def, v))
-		}
-
-		return val
+		return val, nil
 	}
+
+	return []byte(""), ErrInvalidType
 }
 
+func getMapValue(def *Definition, data interface{}) (map[string]interface{}, error) {
+
+	switch d := data.(type) {
+	case map[string]interface{}:
+		return d, nil
+	}
+
+	return nil, ErrInvalidType
+}
+
+func getArrayValue(def *Definition, data interface{}) (interface{}, error) {
+
+	if data == nil {
+		return nil, nil
+	}
+
+	// Not an array
+	v := reflect.ValueOf(data)
+	if v.Kind() != reflect.Array && v.Kind() != reflect.Slice {
+		return nil, ErrInvalidType
+	}
+
+	value := make([]interface{}, v.Len())
+	for i := 0; i < v.Len(); i++ {
+
+		// Get value of element
+		val, err := getValue(def.Subtype, v.Index(i).Interface())
+		if err != nil {
+			return nil, ErrInvalidType
+		}
+
+		value[i] = val
+	}
+
+	return value, nil
+}
+
+/*
 func convert(sourceDef *Definition, destDef *Definition, data interface{}) interface{} {
 
 	srcData := getValue(sourceDef, data)
 
 	return getValue(destDef, srcData)
 }
+*/

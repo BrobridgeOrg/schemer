@@ -1,6 +1,8 @@
 package schemer
 
-import "reflect"
+import (
+	"reflect"
+)
 
 type Record struct {
 	schema *Schema
@@ -17,11 +19,22 @@ func NewRecord(schema *Schema, raw map[string]interface{}) *Record {
 func (r *Record) GetValue(valuePath string) *Value {
 
 	parts := r.schema.parsePath(valuePath)
+
 	def := r.schema.getDefinition(parts)
+	if def == nil {
+		return nil
+	}
 
 	// Create a new value from raw data
 	value := NewValue(def)
-	value.Data = getValue(def, r.getValue(parts))
+
+	// get value with defintion type from raw data
+	v, err := getValue(def, r.getValue(parts))
+	if err != nil {
+		return nil
+	}
+
+	value.Data = v
 
 	return value
 }

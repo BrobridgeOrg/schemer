@@ -60,15 +60,17 @@ func (s *Schema) getDefinition(parts []string) *Definition {
 		// Check if we have a definition for this key
 		d, ok := fields[key]
 		if !ok {
+			// No definition found
 			return nil
 		}
 
 		def = d
 
 		if def.Type == TYPE_MAP {
-			fields = def.Definition.Fields
-		} else if def.Type == TYPE_ARRAY && def.Subtype == TYPE_MAP {
-			fields = def.Definition.Fields
+			// Next level
+			fields = def.Schema.Fields
+		} else if def.Subtype != nil && def.Subtype.Type == TYPE_MAP {
+			fields = def.Subtype.Schema.Fields
 		}
 	}
 
@@ -81,17 +83,51 @@ func (s *Schema) normalize(schema *Schema, data map[string]interface{}) map[stri
 
 	for fieldName, def := range schema.Fields {
 
+		// Check if field name contains a path. If so, we need to parse it to check if the key exists.
+		if strings.Contains(fieldName, ".") {
+			pathDef := s.GetDefinition(fieldName)
+			if pathDef == nil {
+				// Skip this field if the path does not exist in the schema
+				continue
+			}
+		}
+
 		val, ok := data[fieldName]
 		if !ok {
 			continue
 		}
 
 		if def.Type == TYPE_MAP && val != nil {
-			result[fieldName] = s.normalize(def.Definition, val.(map[string]interface{}))
+			result[fieldName] = s.normalize(def.Schema, val.(map[string]interface{}))
 			continue
 		}
 
-		result[fieldName] = getValue(def, val)
+		v, _ := getValue(def, val)
+
+		result[fieldName] = v
+	}
+
+	// set value by path
+	for key, val := range data {
+
+		// Check if field name contains a path.
+		if !strings.Contains(key, ".") {
+			continue
+		}
+
+		// We need to parse it to check if the key exists.
+		def := s.GetDefinition(key)
+		if def == nil {
+			// Skip this field if the path does not exist in the schema
+			continue
+		}
+
+		v, err := getValue(def, val)
+		if err != nil {
+			continue
+		}
+
+		result[key] = v
 	}
 
 	return result
