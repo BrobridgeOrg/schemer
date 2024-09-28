@@ -763,7 +763,7 @@ func TestTransformer_Source_String(t *testing.T) {
 	assert.Equal(t, int64(1595182568123456700), result["microTime"].(time.Time).UnixNano())
 }
 
-func TestTransformer_Source_Bool(t *testing.T) {
+func TestTransformer_Source_Bool_With_True(t *testing.T) {
 
 	sourceSchema := NewSchema()
 	err := UnmarshalJSON([]byte(testSource), sourceSchema)
@@ -817,6 +817,62 @@ func TestTransformer_Source_Bool(t *testing.T) {
 	assert.Equal(t, uint64(1), result["uint"].(uint64))
 	assert.Equal(t, float64(1), result["float"].(float64))
 	assert.Equal(t, true, result["bool"].(bool))
+}
+
+func TestTransformer_Source_Bool_With_False(t *testing.T) {
+
+	sourceSchema := NewSchema()
+	err := UnmarshalJSON([]byte(testSource), sourceSchema)
+	if err != nil {
+		t.Error(err)
+	}
+
+	destSchema := NewSchema()
+	err = UnmarshalJSON([]byte(testDest), destSchema)
+	if err != nil {
+		t.Error(err)
+	}
+
+	// Create transformer
+	transformer := NewTransformer(sourceSchema, destSchema)
+
+	// Set transform script
+	transformer.SetScript(`
+	return {
+		"string": source.bool,
+		"int": source.bool,
+		"uint": source.bool,
+		"float": source.bool,
+		"bool": source.bool
+	}
+`)
+
+	// Transform
+	rawData := `{
+	"bool": false
+}`
+	var sourceData map[string]interface{}
+	err = json.Unmarshal([]byte(rawData), &sourceData)
+	if err != nil {
+		t.Error(err)
+	}
+
+	results, err := transformer.Transform(nil, sourceData)
+	if err != nil {
+		t.Error(err)
+	}
+
+	if len(results) != 1 {
+		t.Fail()
+	}
+
+	result := results[0]
+
+	assert.Equal(t, "false", result["string"].(string))
+	assert.Equal(t, int64(0), result["int"].(int64))
+	assert.Equal(t, uint64(0), result["uint"].(uint64))
+	assert.Equal(t, float64(0), result["float"].(float64))
+	assert.Equal(t, false, result["bool"].(bool))
 }
 
 func TestTransformer_Source_Time(t *testing.T) {
