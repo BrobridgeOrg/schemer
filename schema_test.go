@@ -59,6 +59,30 @@ func TestSchemaUnmarshal(t *testing.T) {
 	assert.Equal(t, TYPE_STRING, attrs.Fields["team"].Type)
 }
 
+func TestSchemaNormalizeWithInternalField(t *testing.T) {
+
+	definition := `{
+	"name": { "type": "string" }
+}`
+
+	data := map[string]interface{}{
+		"$internal": "InternalValue",
+		"name":      "Bob",
+	}
+
+	// Initializing schema
+	schema := NewSchema()
+	err := UnmarshalJSON([]byte(definition), schema)
+	if err != nil {
+		t.Error(err)
+	}
+
+	result := schema.Normalize(data)
+
+	assert.Equal(t, "Bob", result["name"])
+	assert.Equal(t, "InternalValue", result["$internal"])
+}
+
 func TestSchemaScan(t *testing.T) {
 
 	definition := `{

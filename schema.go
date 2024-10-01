@@ -83,6 +83,11 @@ func (s *Schema) normalize(schema *Schema, data map[string]interface{}) map[stri
 
 	for fieldName, def := range schema.Fields {
 
+		// Skip internal fields
+		if strings.HasPrefix(fieldName, "$") {
+			continue
+		}
+
 		// Check if field name contains a path. If so, we need to parse it to check if the key exists.
 		if strings.Contains(fieldName, ".") {
 			pathDef := s.GetDefinition(fieldName)
@@ -109,6 +114,12 @@ func (s *Schema) normalize(schema *Schema, data map[string]interface{}) map[stri
 
 	// set value by path
 	for key, val := range data {
+
+		// Keep internal fields
+		if strings.HasPrefix(key, "$") {
+			result[key] = val
+			continue
+		}
 
 		// Check if field name contains a path.
 		if !strings.Contains(key, ".") {
