@@ -192,7 +192,7 @@ func Test_NestedObject_TransformerWithUpdates(t *testing.T) {
 
 	// Transforming
 	returnedValue, err := transformer.Transform(nil, source)
-	if assert.Nil(t, err) {
+	if !assert.Nil(t, err) {
 		return
 	}
 
