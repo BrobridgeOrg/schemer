@@ -1,6 +1,8 @@
 package schemer
 
 import (
+	_ "embed"
+	"fmt"
 	"reflect"
 	"sync"
 	"time"
@@ -8,6 +10,12 @@ import (
 	"github.com/BrobridgeOrg/schemer/types"
 	"github.com/dop251/goja"
 )
+
+//go:embed js/dummy.js
+var dummyJS string
+
+//go:embed js/core.js
+var coreJS string
 
 type Transformer struct {
 	source  *Schema
@@ -22,14 +30,34 @@ func NewTransformer(source *Schema, dest *Schema) *Transformer {
 	t := &Transformer{
 		source: source,
 		dest:   dest,
-		script: `function main() { return source; }`,
 	}
+
+	t.script = t.prepareScript(`return source;`)
 
 	t.ctxPool.New = func() interface{} {
-		return NewContext()
+		ctx := NewContext()
+
+		// Preload dummy.js
+		_, err := ctx.vm.RunString(dummyJS)
+		if err != nil {
+			panic(err)
+		}
+
+		// Preload core.js
+		_, err = ctx.vm.RunString(coreJS)
+		if err != nil {
+			panic(err)
+		}
+
+		return ctx
 	}
 
-	t.program, _ = goja.Compile("transformer", t.script, false)
+	p, err := goja.Compile("transformer", t.script, false)
+	if err != nil {
+		fmt.Println(err.Error())
+	}
+
+	t.program = p
 
 	return t
 }
@@ -81,7 +109,7 @@ func (t *Transformer) initializeContext(ctx *Context, env map[string]interface{}
 		t.normalize(ctx, t.source, data)
 	}
 
-	ctx.vm.Set("source", data)
+	//	ctx.vm.Set("source", data)
 
 	return nil
 }
@@ -166,18 +194,34 @@ func (t *Transformer) normalizeValue(v map[string]interface{}) (map[string]inter
 	return val, nil
 }
 
-func (t *Transformer) runScript(ctx *Context) ([]map[string]interface{}, error) {
+func (t *Transformer) runScript(ctx *Context, data map[string]interface{}) ([]map[string]interface{}, error) {
 
-	var fn func() interface{}
-	err := ctx.vm.ExportTo(ctx.vm.Get("main"), &fn)
+	main, ok := goja.AssertFunction(ctx.vm.Get("main"))
+	if !ok {
+		return nil, fmt.Errorf("main is not a function")
+	}
+
+	source := ctx.vm.ToValue(data)
+	res, err := main(goja.Undefined(), source)
 	if err != nil {
 		return nil, err
 	}
+	/*
+		var fn func() interface{}
+		err := ctx.vm.ExportTo(ctx.vm.Get("main"), &fn)
+		if err != nil {
+			return nil, err
+		}
 
-	result := fn()
-	if result == nil {
+		result := fn()
+	*/
+
+	var result interface{}
+	if goja.IsNull(res) || goja.IsUndefined(res) {
 		return nil, nil
 	}
+
+	result = res.Export()
 
 	v := reflect.ValueOf(result)
 	switch v.Kind() {
@@ -247,7 +291,7 @@ func (t *Transformer) Transform(env map[string]interface{}, input map[string]int
 	}
 
 	// Run script to process data
-	result, err := t.runScript(ctx)
+	result, err := t.runScript(ctx, data)
 	if err != nil {
 		return nil, err
 	}
@@ -259,31 +303,13 @@ func (t *Transformer) Transform(env map[string]interface{}, input map[string]int
 	return result, nil
 }
 
+func (t *Transformer) prepareScript(script string) string {
+	return `function script(source) {` + script + `}`
+}
+
 func (t *Transformer) SetScript(script string) error {
-	t.script = `
-function run() {` + script + `}
-function scanStruct(obj) {
-	for (key in obj) {
-		val = obj[key]
-		if (val === undefined) {
-			delete obj[key]
-		} else if (val == null) {
-			continue
-		} else if (val instanceof Array) {
-			scanStruct(val)
-		} else if (typeof val === 'object') {
-			scanStruct(val)
-		}
-	}
-}
-function main() {
-	v = run()
-	if (v === null)
-		return null
-	scanStruct(v)
-	return v
-}
-`
+
+	t.script = t.prepareScript(script)
 
 	p, err := goja.Compile("transformer", t.script, false)
 	if err != nil {

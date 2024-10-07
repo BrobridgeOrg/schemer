@@ -418,9 +418,7 @@ func TestTransformer_NullResult(t *testing.T) {
 		t.Error(err)
 	}
 
-	if len(results) != 0 {
-		t.Fail()
-	}
+	assert.Equal(t, 0, len(results))
 }
 
 func TestTransformer_NestedStructure(t *testing.T) {
