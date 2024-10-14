@@ -170,6 +170,13 @@ describe('Transformer testing', function() {
         output.SSS = value;
       });
 
+      source.$watch('unused_field', (value, removed) => {
+        if (!output.$removedFields)
+          output.$removedFields = [];
+
+        output.$removedFields.push('UNUSED');
+      });
+
       return output;
     }
 
@@ -177,6 +184,7 @@ describe('Transformer testing', function() {
     
     assert.equal(result['AAA'], source['aaa.bbb.ccc']);
     assert.equal(result['SSS'], source['aaa.bbb.sss']);
+    assert.deepEqual(result.$removedFields, [ 'UNUSED' ]);
   });
 
   it('With operators', function() {

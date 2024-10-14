@@ -91,12 +91,26 @@ function getValue(source, key) {
 
 function watch(source, key, cb) {
 
+  // removed fields
+  if (source['$removedFields']) {
+    let removed = source.$removedFields.find((removedField) => {
+      if (removedField == key) {
+        return true
+      }
+    });
+
+    if (removed) {
+      cb(undefined, true);
+      return;
+    }
+  }
+
   let value = getValue(source, key);
   if (value === undefined) {
     return;
   }
 
-  cb(value);
+  cb(value, false);
 }
 
 function mapping(source = {}, mapping = {}) {
