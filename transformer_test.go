@@ -113,13 +113,13 @@ func TestTransformer(t *testing.T) {
 }`
 	var sourceData map[string]interface{}
 	err = json.Unmarshal([]byte(rawData), &sourceData)
-	if err != nil {
-		t.Error(err)
+	if !assert.Nil(t, err) {
+		return
 	}
 
 	returnedValue, err := transformer.Transform(nil, sourceData)
-	if err != nil {
-		t.Error(err)
+	if !assert.Nil(t, err) {
+		return
 	}
 
 	if len(returnedValue) != 1 {
@@ -167,13 +167,13 @@ func TestTransformerWithoutSourceSchema(t *testing.T) {
 }`
 	var sourceData map[string]interface{}
 	err = json.Unmarshal([]byte(rawData), &sourceData)
-	if err != nil {
-		t.Error(err)
+	if !assert.Nil(t, err) {
+		return
 	}
 
 	returnedValue, err := transformer.Transform(nil, sourceData)
-	if err != nil {
-		t.Error(err)
+	if !assert.Nil(t, err) {
+		return
 	}
 
 	if len(returnedValue) != 1 {
@@ -368,8 +368,8 @@ func TestTransformer_Default(t *testing.T) {
 	}
 
 	results, err := transformer.Transform(nil, sourceData)
-	if err != nil {
-		t.Error(err)
+	if !assert.Nil(t, err) {
+		return
 	}
 
 	if len(results) != 1 {
@@ -955,13 +955,13 @@ func TestTransformer_Source_Time_Dest_Empty(t *testing.T) {
 }`
 	var sourceData map[string]interface{}
 	err = json.Unmarshal([]byte(rawData), &sourceData)
-	if err != nil {
-		t.Error(err)
+	if !assert.Nil(t, err) {
+		return
 	}
 
 	results, err := transformer.Transform(nil, sourceData)
-	if err != nil {
-		t.Error(err)
+	if !assert.Nil(t, err) {
+		return
 	}
 
 	if len(results) != 1 {
@@ -977,14 +977,14 @@ func TestTransformer_Source_MicroTime(t *testing.T) {
 
 	sourceSchema := NewSchema()
 	err := UnmarshalJSON([]byte(testSource), sourceSchema)
-	if err != nil {
-		t.Error(err)
+	if !assert.Nil(t, err) {
+		return
 	}
 
 	destSchema := NewSchema()
 	err = UnmarshalJSON([]byte(testDest), destSchema)
-	if err != nil {
-		t.Error(err)
+	if !assert.Nil(t, err) {
+		return
 	}
 
 	// Create transformer

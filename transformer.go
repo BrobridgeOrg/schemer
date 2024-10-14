@@ -18,18 +18,20 @@ var dummyJS string
 var coreJS string
 
 type Transformer struct {
-	source  *Schema
-	dest    *Schema
-	script  string
-	program *goja.Program
-	ctxPool sync.Pool
+	source        *Schema
+	dest          *Schema
+	script        string
+	program       *goja.Program
+	ctxPool       sync.Pool
+	relationships map[string][]string
 }
 
 func NewTransformer(source *Schema, dest *Schema) *Transformer {
 
 	t := &Transformer{
-		source: source,
-		dest:   dest,
+		source:        source,
+		dest:          dest,
+		relationships: make(map[string][]string),
 	}
 
 	t.script = t.prepareScript(`return source;`)
@@ -204,6 +206,7 @@ func (t *Transformer) runScript(ctx *Context, data map[string]interface{}) ([]ma
 	source := ctx.vm.ToValue(data)
 	res, err := main(goja.Undefined(), source)
 	if err != nil {
+		fmt.Println(err)
 		return nil, err
 	}
 	/*
