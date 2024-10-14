@@ -81,6 +81,20 @@ describe('Transformer testing', function() {
     assert.deepEqual(result['XXX'], source['xxx']);
   });
 
+  it('Get updates for specific key', function() {
+
+    function script(source = {}) {
+      return source.$getUpdates('aaa');
+    }
+
+    let result = execute(source, script);
+
+    assert.deepEqual(result['aaa.bbb.ccc'], source['aaa.bbb.ccc']);
+    assert.deepEqual(result['aaa.bbb.sss'], source['aaa.bbb.sss']);
+    assert.deepEqual(result['aaa.ddd'], source['aaa.ddd']);
+    assert.deepEqual(result['aaa.ggg'], source['aaa.ggg']);
+  });
+
   it('$removedFields', function() {
 
     function script(source = {}) {
