@@ -83,6 +83,62 @@ func TestSchemaNormalizeWithInternalField(t *testing.T) {
 	assert.Equal(t, "InternalValue", result["$internal"])
 }
 
+func TestSchemaNormalizeWithNestedStructure(t *testing.T) {
+
+	definition := `{
+	"attributes": {
+		"type": "map",
+		"fields": {
+			"title": { "type": "string" },
+			"team": { "type": "string" }
+		}
+	},
+	"nested": {
+		"type": "array",
+		"subtype": {
+			"type": "array",
+			"subtype": "string"
+		}
+	}
+}`
+
+	data := map[string]interface{}{
+		"attributes": map[string]interface{}{
+			"title": "hello",
+			"team":  "world",
+		},
+		"nested": []interface{}{
+			[]interface{}{"tag1", "tag2"},
+		},
+		"attributes.title": "new_hello",
+		"nested.0.0":       "new_tag1",
+	}
+
+	// Initializing schema
+	schema := NewSchema()
+	err := UnmarshalJSON([]byte(definition), schema)
+	if err != nil {
+		t.Error(err)
+	}
+
+	result := schema.Normalize(data)
+
+	// field: attributes
+	attrs := result["attributes"].(map[string]interface{})
+	assert.Equal(t, "hello", attrs["title"])
+	assert.Equal(t, "world", attrs["team"])
+
+	// field: nested
+	nested := result["nested"].([]interface{})
+	sub := nested[0].([]interface{})
+	assert.Contains(t, sub, "tag1")
+	assert.Contains(t, sub, "tag2")
+
+	// fullpath field
+	assert.Equal(t, "new_hello", result["attributes.title"])
+	assert.Equal(t, "new_tag1", result["nested.0.0"])
+}
+
 func TestSchemaScan(t *testing.T) {
 
 	definition := `{

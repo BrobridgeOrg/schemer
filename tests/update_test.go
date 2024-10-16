@@ -58,10 +58,11 @@ func Test_NestedObject_Updates(t *testing.T) {
 	}
 
 	source := testSourceSchema.Normalize(map[string]interface{}{
-		"string":       "Test String",
-		"object.id":    "NotExists",
-		"object.title": "Test Title",
-		"object.team":  "A Team",
+		"string":        "Test String",
+		"object.id":     "NotExists",
+		"object.title":  "Test Title",
+		"object.team":   "A Team",
+		"object.tags.0": "new_tag1",
 		"object.tags": []string{
 			"tag1",
 			"tag2",
@@ -80,6 +81,12 @@ func Test_NestedObject_Updates(t *testing.T) {
 		"any": "Any Value",
 	})
 
+	// Check definition
+	assert.Equal(t, schemer.TYPE_MAP, testSourceSchema.GetDefinition("object").Type)
+	assert.Equal(t, schemer.TYPE_STRING, testSourceSchema.GetDefinition("object.title").Type)
+	assert.Equal(t, schemer.TYPE_STRING, testSourceSchema.GetDefinition("object.team").Type)
+	assert.Equal(t, schemer.TYPE_STRING, testSourceSchema.GetDefinition("object.authors.name").Type)
+
 	// Normal fields
 	assert.Nil(t, source["object.id"])
 	assert.Equal(t, "Test String", source["string"].(string))
@@ -94,6 +101,7 @@ func Test_NestedObject_Updates(t *testing.T) {
 	tags := source["object.tags"].([]interface{})
 	assert.Equal(t, "tag1", tags[0].(string))
 	assert.Equal(t, "tag2", tags[1].(string))
+	assert.Equal(t, "new_tag1", source["object.tags.0"].(string))
 
 	// Nested object
 	assert.Equal(t, "Test Title", source["object.nestedObject.title"].(string))

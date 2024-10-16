@@ -54,6 +54,29 @@ func (s *Schema) getDefinition(parts []string) *Definition {
 	fields := s.Fields
 	for _, entry := range parts {
 
+		if def != nil {
+
+			switch def.Type {
+			case TYPE_ARRAY:
+
+				if def.Subtype == nil {
+					return nil
+				}
+
+				def = def.Subtype
+
+				if def.Type == TYPE_MAP {
+					fields = def.Schema.Fields
+				} else if def.Type == TYPE_ARRAY {
+					continue
+				} else {
+					return def
+				}
+			case TYPE_MAP:
+				fields = def.Schema.Fields
+			}
+		}
+
 		// Parse key and index
 		key, _ := parsePathEntry(entry)
 
@@ -65,13 +88,6 @@ func (s *Schema) getDefinition(parts []string) *Definition {
 		}
 
 		def = d
-
-		if def.Type == TYPE_MAP {
-			// Next level
-			fields = def.Schema.Fields
-		} else if def.Subtype != nil && def.Subtype.Type == TYPE_MAP {
-			fields = def.Subtype.Schema.Fields
-		}
 	}
 
 	return def
