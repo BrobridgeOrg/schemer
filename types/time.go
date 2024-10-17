@@ -14,15 +14,15 @@ const (
 )
 
 const (
-	TIME_PERCISION_SECOND      TimePercision = 0
-	TIME_PERCISION_MILLISECOND TimePercision = 1
-	TIME_PERCISION_MICROSECOND TimePercision = 2
+	TIME_PRECISION_SECOND      TimePercision = 0
+	TIME_PRECISION_MILLISECOND TimePercision = 1
+	TIME_PRECISION_MICROSECOND TimePercision = 2
 )
 
 var TimePercisions = map[string]TimePercision{
-	"second":      TIME_PERCISION_SECOND,
-	"millisecond": TIME_PERCISION_MILLISECOND,
-	"microsecond": TIME_PERCISION_MICROSECOND,
+	"second":      TIME_PRECISION_SECOND,
+	"millisecond": TIME_PRECISION_MILLISECOND,
+	"microsecond": TIME_PRECISION_MICROSECOND,
 }
 
 type Time struct {
@@ -40,7 +40,7 @@ func (t *Time) Parse(data interface{}) error {
 
 		p, ok := TimePercisions[v.(string)]
 		if !ok {
-			return fmt.Errorf("Unsupported percision type: %v", v)
+			return fmt.Errorf("Unsupported precision type: %v", v)
 		}
 
 		t.Percision = p
@@ -52,9 +52,9 @@ func (t *Time) Parse(data interface{}) error {
 func (t *Time) getValueByPercision(d int64) time.Time {
 
 	switch t.Percision {
-	case TIME_PERCISION_MILLISECOND:
+	case TIME_PRECISION_MILLISECOND:
 		return time.Unix(d/MilliInSecond, d%MilliInSecond*1000000)
-	case TIME_PERCISION_MICROSECOND:
+	case TIME_PRECISION_MICROSECOND:
 		return time.Unix(d/MicroInSecond, d%MicroInSecond*1000)
 	}
 

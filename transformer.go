@@ -85,7 +85,7 @@ func (t *Transformer) normalize(ctx *Context, schema *Schema, data map[string]in
 				continue
 			}
 
-			if def.Info.(*types.Time).Percision != types.TIME_PERCISION_MICROSECOND {
+			if def.Info.(*types.Time).Percision != types.TIME_PRECISION_MICROSECOND {
 				v, _ := ctx.vm.New(ctx.vm.Get("Date").ToObject(ctx.vm), ctx.vm.ToValue(val.(time.Time).UnixMicro()/1e3))
 				data[fieldName] = v
 			}
