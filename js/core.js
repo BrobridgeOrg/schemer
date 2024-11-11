@@ -1,3 +1,4 @@
+// For testing only
 function scanStruct(obj) {
 	for (let key in obj) {
 		let val = obj[key]
@@ -13,6 +14,37 @@ function scanStruct(obj) {
 	}
 }
 
+function prepareRefs(source) {
+
+  let result = {};
+
+  for (let sourceKey in source) {
+
+    let keyParts = sourceKey.split('.');
+    let value = source[sourceKey];
+
+    let level = result;
+    let count = 0;
+    for (let part of keyParts) {
+
+      if (count === keyParts.length - 1) {
+        level[part] = value
+        break;
+      }
+
+      if (!level[part]) {
+        level[part] = {}
+      }
+
+      level = level[part];
+      count++;
+    }
+  }
+
+  return result;
+}
+
+// Implementation
 function main(source) {
 	let v = execute(source, script)
 	if (!v)
@@ -153,7 +185,7 @@ const proxyHandler = {
 function execute(source, script) {
 
   let data = Object.assign({}, source, {
-    $ref: normalize(source)
+    $ref: prepareRefs(source)
   });
 
   let proxy = new Proxy(data, proxyHandler);

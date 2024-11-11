@@ -4,7 +4,6 @@ import (
 	_ "embed"
 	"fmt"
 	"reflect"
-	"strings"
 	"time"
 
 	"github.com/BrobridgeOrg/schemer/types"
@@ -24,6 +23,7 @@ type Transformer struct {
 	program       *goja.Program
 	ctx           *Context
 	relationships map[string][]string
+	internalImpl  *TransformerScriptImpl
 }
 
 func NewTransformer(source *Schema, dest *Schema) *Transformer {
@@ -32,6 +32,7 @@ func NewTransformer(source *Schema, dest *Schema) *Transformer {
 		source:        source,
 		dest:          dest,
 		relationships: make(map[string][]string),
+		internalImpl:  NewTransformerScript(),
 	}
 
 	// Preparing context
@@ -198,42 +199,12 @@ func (t *Transformer) normalizeValue(v map[string]interface{}) (map[string]inter
 	return val, nil
 }
 
-func (t *Transformer) prepareRefs(source map[string]interface{}) map[string]interface{} {
-	result := make(map[string]interface{})
-
-	for sourceKey, value := range source {
-		keyParts := strings.Split(sourceKey, ".")
-		level := result
-
-		for i := 0; i < len(keyParts); i++ {
-			part := keyParts[i]
-
-			// If we are at the last part, assign the value
-			if i == len(keyParts)-1 {
-				level[part] = value
-			} else {
-				// If the part does not exist, create a new map
-				if _, ok := level[part]; !ok {
-					level[part] = make(map[string]interface{})
-				}
-
-				// Move deeper into the nested map
-				nextLevel, _ := level[part].(map[string]interface{})
-				level = nextLevel
-			}
-		}
-	}
-
-	return result
-}
-
 func (t *Transformer) injectFuncs() error {
 
-	t.ctx.vm.Set("normalize", func(call goja.FunctionCall) goja.Value {
-		input := call.Argument(0).Export().(map[string]interface{})
-		result := t.prepareRefs(input)
-		return t.ctx.vm.ToValue(result)
-	})
+	err := t.internalImpl.injectFuncs(t.ctx.vm)
+	if err != nil {
+		return err
+	}
 
 	return nil
 }
