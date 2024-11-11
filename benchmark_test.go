@@ -3,7 +3,31 @@ package schemer
 import (
 	"encoding/json"
 	"testing"
+
+	"github.com/dop251/goja"
 )
+
+func BenchmarkJavaScriptVM(b *testing.B) {
+
+	vm := goja.New()
+
+	p, _ := goja.Compile("transformer", "function main() {}", false)
+
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		vm.RunProgram(p)
+
+		main, ok := goja.AssertFunction(vm.Get("main"))
+		if !ok {
+			panic("main is not a function")
+		}
+
+		_, err := main(goja.Undefined())
+		if err != nil {
+			panic(err)
+		}
+	}
+}
 
 func BenchmarkScan(b *testing.B) {
 

@@ -6,7 +6,7 @@ import (
 	"time"
 )
 
-type TimePercision int32
+type TimePrecision int32
 
 const (
 	MicroInSecond = 1000000
@@ -14,19 +14,20 @@ const (
 )
 
 const (
-	TIME_PRECISION_SECOND      TimePercision = 0
-	TIME_PRECISION_MILLISECOND TimePercision = 1
-	TIME_PRECISION_MICROSECOND TimePercision = 2
+	TIME_PRECISION_SECOND      TimePrecision = 0
+	TIME_PRECISION_MILLISECOND TimePrecision = 1
+	TIME_PRECISION_MICROSECOND TimePrecision = 2
 )
 
-var TimePercisions = map[string]TimePercision{
+var TimePrecisions = map[string]TimePrecision{
 	"second":      TIME_PRECISION_SECOND,
 	"millisecond": TIME_PRECISION_MILLISECOND,
 	"microsecond": TIME_PRECISION_MICROSECOND,
 }
 
 type Time struct {
-	Percision TimePercision
+	Precision TimePrecision
+	Format    string
 }
 
 func NewTime() *Time {
@@ -38,26 +39,27 @@ func (t *Time) Parse(data interface{}) error {
 	props := data.(map[string]interface{})
 	if v, ok := props["precision"]; ok {
 
-		p, ok := TimePercisions[v.(string)]
+		p, ok := TimePrecisions[v.(string)]
 		if !ok {
 			return fmt.Errorf("Unsupported precision type: %v", v)
 		}
 
-		t.Percision = p
+		t.Precision = p
 	}
 
 	return nil
 }
 
-func (t *Time) getValueByPercision(d int64) time.Time {
+func (t *Time) getValueByPrecision(d int64) time.Time {
 
-	switch t.Percision {
+	switch t.Precision {
 	case TIME_PRECISION_MILLISECOND:
 		return time.Unix(d/MilliInSecond, d%MilliInSecond*1000000)
 	case TIME_PRECISION_MICROSECOND:
 		return time.Unix(d/MicroInSecond, d%MicroInSecond*1000)
 	}
 
+	// Auto detect precision
 	if d >= 1000000000000000 {
 		// with microsecond
 		return time.Unix(int64(d)/MicroInSecond, int64(d)%MicroInSecond*1000)
@@ -75,9 +77,9 @@ func (t *Time) GetValue(data interface{}) (time.Time, error) {
 	case time.Time:
 		return d, nil
 	case int64:
-		return t.getValueByPercision(d), nil
+		return t.getValueByPrecision(d), nil
 	case uint64:
-		return t.getValueByPercision(int64(d)), nil
+		return t.getValueByPrecision(int64(d)), nil
 	case string:
 
 		if len(d) == 0 {
@@ -99,7 +101,7 @@ func (t *Time) GetValue(data interface{}) (time.Time, error) {
 
 		return t, nil
 	case float64:
-		return t.getValueByPercision(int64(d)), nil
+		return t.getValueByPrecision(int64(d)), nil
 	}
 
 	return time.Unix(0, 0), nil
