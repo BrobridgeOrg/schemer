@@ -47,3 +47,13 @@ func (ctx *Context) PreloadScript(p *goja.Program) error {
 func (ctx *Context) IsReady() bool {
 	return ctx.ready
 }
+
+func (ctx *Context) LoadScript(script string) error {
+
+	_, err := ctx.vm.RunString(script)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}

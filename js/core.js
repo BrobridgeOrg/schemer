@@ -28,36 +28,6 @@ function main(source) {
 	return v
 }
 
-function normalize(source) {
-
-  let result = {};
-
-  for (let sourceKey in source) {
-
-    let keyParts = sourceKey.split('.');
-    let value = source[sourceKey];
-
-    let level = result;
-    let count = 0;
-    for (let part of keyParts) {
-
-      if (count === keyParts.length - 1) {
-        level[part] = value
-        break;
-      }
-
-      if (!level[part]) {
-        level[part] = {}
-      }
-
-      level = level[part];
-      count++;
-    }
-  }
-
-  return result;
-}
-
 function getUpdates(source, from) {
 
   let updates = {};

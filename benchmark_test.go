@@ -22,10 +22,12 @@ func BenchmarkJavaScriptVM(b *testing.B) {
 			panic("main is not a function")
 		}
 
-		_, err := main(goja.Undefined())
+		res, err := main(goja.Undefined())
 		if err != nil {
 			panic(err)
 		}
+
+		res.Export()
 	}
 }
 

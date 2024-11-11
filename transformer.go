@@ -4,7 +4,7 @@ import (
 	_ "embed"
 	"fmt"
 	"reflect"
-	"sync"
+	"strings"
 	"time"
 
 	"github.com/BrobridgeOrg/schemer/types"
@@ -22,7 +22,7 @@ type Transformer struct {
 	dest          *Schema
 	script        string
 	program       *goja.Program
-	ctxPool       sync.Pool
+	ctx           *Context
 	relationships map[string][]string
 }
 
@@ -34,34 +34,39 @@ func NewTransformer(source *Schema, dest *Schema) *Transformer {
 		relationships: make(map[string][]string),
 	}
 
-	t.script = t.prepareScript(`return source;`)
-
-	t.ctxPool.New = func() interface{} {
-		ctx := NewContext()
-
-		// Preload dummy.js
-		_, err := ctx.vm.RunString(dummyJS)
-		if err != nil {
-			panic(err)
-		}
-
-		// Preload core.js
-		_, err = ctx.vm.RunString(coreJS)
-		if err != nil {
-			panic(err)
-		}
-
-		return ctx
-	}
-
-	p, err := goja.Compile("transformer", t.script, false)
+	// Preparing context
+	ctx, err := t.createContext()
 	if err != nil {
-		fmt.Println(err.Error())
+		panic(err)
 	}
 
-	t.program = p
+	t.ctx = ctx
+
+	t.injectFuncs()
+
+	err = t.SetScript(`return source`)
+	if err != nil {
+		panic(err)
+	}
 
 	return t
+}
+
+func (t *Transformer) createContext() (*Context, error) {
+
+	ctx := NewContext()
+
+	err := ctx.LoadScript(dummyJS)
+	if err != nil {
+		return nil, err
+	}
+
+	err = ctx.LoadScript(coreJS)
+	if err != nil {
+		return nil, err
+	}
+
+	return ctx, nil
 }
 
 func (t *Transformer) normalize(ctx *Context, schema *Schema, data map[string]interface{}) {
@@ -97,10 +102,7 @@ func (t *Transformer) normalize(ctx *Context, schema *Schema, data map[string]in
 func (t *Transformer) initializeContext(ctx *Context, env map[string]interface{}, schema *Schema, data map[string]interface{}) error {
 
 	if !ctx.IsReady() {
-		err := ctx.PreloadScript(t.program)
-		if err != nil {
-			return err
-		}
+		return fmt.Errorf("Context is not ready")
 	}
 
 	// Initializing environment varable
@@ -196,6 +198,46 @@ func (t *Transformer) normalizeValue(v map[string]interface{}) (map[string]inter
 	return val, nil
 }
 
+func (t *Transformer) prepareRefs(source map[string]interface{}) map[string]interface{} {
+	result := make(map[string]interface{})
+
+	for sourceKey, value := range source {
+		keyParts := strings.Split(sourceKey, ".")
+		level := result
+
+		for i := 0; i < len(keyParts); i++ {
+			part := keyParts[i]
+
+			// If we are at the last part, assign the value
+			if i == len(keyParts)-1 {
+				level[part] = value
+			} else {
+				// If the part does not exist, create a new map
+				if _, ok := level[part]; !ok {
+					level[part] = make(map[string]interface{})
+				}
+
+				// Move deeper into the nested map
+				nextLevel, _ := level[part].(map[string]interface{})
+				level = nextLevel
+			}
+		}
+	}
+
+	return result
+}
+
+func (t *Transformer) injectFuncs() error {
+
+	t.ctx.vm.Set("normalize", func(call goja.FunctionCall) goja.Value {
+		input := call.Argument(0).Export().(map[string]interface{})
+		result := t.prepareRefs(input)
+		return t.ctx.vm.ToValue(result)
+	})
+
+	return nil
+}
+
 func (t *Transformer) runScript(ctx *Context, data map[string]interface{}) ([]map[string]interface{}, error) {
 
 	main, ok := goja.AssertFunction(ctx.vm.Get("main"))
@@ -284,17 +326,13 @@ func (t *Transformer) Transform(env map[string]interface{}, input map[string]int
 		data = t.source.Normalize(input)
 	}
 
-	// Preparing context and runtime
-	ctx := t.ctxPool.Get().(*Context)
-	defer t.ctxPool.Put(ctx)
-
-	err := t.initializeContext(ctx, env, t.source, data)
+	err := t.initializeContext(t.ctx, env, t.source, data)
 	if err != nil {
 		return nil, err
 	}
 
 	// Run script to process data
-	result, err := t.runScript(ctx, data)
+	result, err := t.runScript(t.ctx, data)
 	if err != nil {
 		return nil, err
 	}
@@ -320,6 +358,11 @@ func (t *Transformer) SetScript(script string) error {
 	}
 
 	t.program = p
+
+	err = t.ctx.PreloadScript(t.program)
+	if err != nil {
+		panic(err)
+	}
 
 	return nil
 }
