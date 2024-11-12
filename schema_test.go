@@ -2,7 +2,6 @@ package schemer
 
 import (
 	"bytes"
-	"encoding/json"
 	"testing"
 	"time"
 

@@ -1,14 +1,11 @@
 package schemer
 
 import (
-	"encoding/json"
 	"strings"
-	"sync"
 )
 
 type Schema struct {
 	Fields map[string]*Definition
-	Mutex  sync.RWMutex
 }
 
 func NewSchema() *Schema {
@@ -46,9 +43,6 @@ func (s *Schema) GetDefinition(valuePath string) *Definition {
 }
 
 func (s *Schema) getDefinition(parts []string) *Definition {
-
-	s.Mutex.RLock()
-	defer s.Mutex.RUnlock()
 
 	var def *Definition
 	fields := s.Fields

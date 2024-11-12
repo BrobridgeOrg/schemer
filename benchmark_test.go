@@ -1,7 +1,6 @@
 package schemer
 
 import (
-	"encoding/json"
 	"testing"
 
 	"github.com/dop251/goja"
