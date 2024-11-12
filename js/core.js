@@ -44,6 +44,11 @@ function prepareRefs(source) {
   return result;
 }
 
+function executeForTesting(source, script) {
+  source.$ref = prepareRefs(source);
+  return execute(source, script);
+}
+
 // Implementation
 function main(source) {
 	let v = execute(source, script)
@@ -181,12 +186,9 @@ const proxyHandler = {
   }
 };
 
-
 function execute(source, script) {
 
-  let data = Object.assign({}, source, {
-    $ref: prepareRefs(source)
-  });
+  let data = Object.assign({}, source)
 
   let proxy = new Proxy(data, proxyHandler);
 
@@ -210,5 +212,6 @@ module.exports = {
   getValue: getValue,
   watch: watch,
   execute: execute,
+  executeForTesting: executeForTesting,
   mapping: mapping,
 };

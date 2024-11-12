@@ -216,6 +216,11 @@ func (t *Transformer) runScript(ctx *Context, data map[string]interface{}) ([]ma
 		return nil, fmt.Errorf("main is not a function")
 	}
 
+	// Preparing $ref
+	ref := t.internalImpl.PrepareRefs(data)
+	data["$ref"] = ref
+
+	// Execute
 	source := ctx.vm.ToValue(data)
 	res, err := main(goja.Undefined(), source)
 	if err != nil {
@@ -233,7 +238,7 @@ func (t *Transformer) runScript(ctx *Context, data map[string]interface{}) ([]ma
 	*/
 
 	var result interface{}
-	if goja.IsNull(res) || goja.IsUndefined(res) {
+	if goja.IsNull(res) || goja.IsUndefined(res) || goja.IsNaN(res) || goja.IsInfinity(res) {
 		return nil, nil
 	}
 

@@ -1,6 +1,6 @@
 
 const assert = require('assert');
-const { execute } = require('../js/core');
+const { executeForTesting } = require('../js/core');
 
 describe('Transformer testing', function() {
 
@@ -53,7 +53,7 @@ describe('Transformer testing', function() {
       return source;
     }
 
-    let result = execute(source, script);
+    let result = executeForTesting(source, script);
 
     for (let field in result) {
       assert.deepEqual(result[field], source[field]);
@@ -71,7 +71,7 @@ describe('Transformer testing', function() {
       });
     }
 
-    let result = execute(source, script);
+    let result = executeForTesting(source, script);
 
     assert.deepEqual(result['AAA'], source['aaa']);
     assert.deepEqual(result['AAA.ddd'], source['aaa.ddd']);
@@ -87,7 +87,7 @@ describe('Transformer testing', function() {
       return source.$getUpdates('aaa');
     }
 
-    let result = execute(source, script);
+    let result = executeForTesting(source, script);
 
     assert.deepEqual(result['aaa.bbb.ccc'], source['aaa.bbb.ccc']);
     assert.deepEqual(result['aaa.bbb.sss'], source['aaa.bbb.sss']);
@@ -104,7 +104,7 @@ describe('Transformer testing', function() {
       })
     }
 
-    let result = execute(source, script);
+    let result = executeForTesting(source, script);
 
     assert.deepEqual(result.$removedFields, [ 'UNUSED' ]);
   });
@@ -121,7 +121,7 @@ describe('Transformer testing', function() {
       })
     }
 
-    let result = execute(source, script);
+    let result = executeForTesting(source, script);
 
     for (let field in result) {
       if (field == '$removedFields')
@@ -146,7 +146,7 @@ describe('Transformer testing', function() {
       });
     }
 
-    let result = execute(source, script);
+    let result = executeForTesting(source, script);
 
     //console.log(result);
 
@@ -194,7 +194,7 @@ describe('Transformer testing', function() {
       return output;
     }
 
-    let result = execute(source, script);
+    let result = executeForTesting(source, script);
     
     assert.equal(result['AAA'], source['aaa.bbb.ccc']);
     assert.equal(result['SSS'], source['aaa.bbb.sss']);
@@ -212,7 +212,7 @@ describe('Transformer testing', function() {
         };
     }
 
-    let result = execute(source, script);
+    let result = executeForTesting(source, script);
     
     assert.equal(result['kkk'], source['aaa.ddd'] + 99999);
     assert.equal(result['op_str'], source['aaa.ddd'] + 'QQQQQ');
@@ -238,7 +238,7 @@ describe('Transformer testing', function() {
       };
     }
 
-    let result = execute(source, script);
+    let result = executeForTesting(source, script);
 
     // From specified fields
     assert.equal(result.nested.sss, source['aaa.bbb.sss']);
@@ -263,7 +263,7 @@ describe('Transformer testing', function() {
       };
     }
 
-    let result = execute(source, script);
+    let result = executeForTesting(source, script);
 
     assert.deepEqual(result.newArr, source.myArray);
     assert.equal(result['firstElement'], source.myArray[0]);
