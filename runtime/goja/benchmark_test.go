@@ -1,12 +1,14 @@
 package goja_runtime
 
 import (
-	"encoding/json"
 	"testing"
 
 	"github.com/BrobridgeOrg/schemer"
 	"github.com/dop251/goja"
+	jsoniter "github.com/json-iterator/go"
 )
+
+var json = jsoniter.ConfigCompatibleWithStandardLibrary
 
 var testSchema = `{
 	"string": { "type": "string" },
