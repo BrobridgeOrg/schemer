@@ -3,6 +3,7 @@ package tests
 import (
 	"encoding/json"
 	"fmt"
+	"math"
 	"testing"
 
 	"github.com/BrobridgeOrg/schemer"
@@ -177,11 +178,11 @@ func TestNormalSchema(t *testing.T) {
 	NormalSchemaTransformTest(t, testSourceSchema, transformer, mainSuccessInput5, mainSuccessExpected5)
 
 	mainSuccessInput6 := normalSchemaInput{`6`, NORMAL_SCHEMA_LARGE_STRING, `""`, `-1`, `0`, `1.7976931348623157e+308`, `"False"`, `""`}
-	mainSuccessExpected6 := normalSchemaExpected{6, NORMAL_SCHEMA_LARGE_STRING_EXPECTED_OUTPUT, []byte{}, -1, 0, 1.7976931348623157e+308, false, ""}
+	mainSuccessExpected6 := normalSchemaExpected{6, NORMAL_SCHEMA_LARGE_STRING_EXPECTED_OUTPUT, []byte{}, -1, 0, math.MaxFloat64, false, ""}
 	NormalSchemaTransformTest(t, testSourceSchema, transformer, mainSuccessInput6, mainSuccessExpected6)
 
 	mainSuccessInput7 := normalSchemaInput{`7`, `""`, `" "`, `5`, `5`, `-1.7976931348623157e+308`, `"T"`, `5`}
-	mainSuccessExpected7 := normalSchemaExpected{7, "", []byte{0x20}, 5, 5, -1.7976931348623157e+308, true, int64(5)}
+	mainSuccessExpected7 := normalSchemaExpected{7, "", []byte{0x20}, 5, 5, -math.MaxFloat64, true, int64(5)}
 	NormalSchemaTransformTest(t, testSourceSchema, transformer, mainSuccessInput7, mainSuccessExpected7)
 
 	mainSuccessInput8 := normalSchemaInput{`8`, `" "`, `"0"`, `0`, `0`, `-0`, `"F"`, `[]`}
@@ -250,11 +251,11 @@ func TestNormalSchemaErrorHandle(t *testing.T) {
 	NormalSchemaTransformTest(t, testSourceSchema, transformer, extensionOneInput6, extensionOneExpected6)
 
 	extensionOneInput7 := normalSchemaInput{`7`, `5`, `"abc"`, `9223372036854775808`, `-1`, `1.0000000000000001`, `5`, `""`}
-	extensionOneExpected7 := normalSchemaExpected{7, "5", []byte{0x61, 0x62, 0x63}, -9223372036854775808, 18446744073709551615, 1, true, ""}
+	extensionOneExpected7 := normalSchemaExpected{7, "5", []byte{0x61, 0x62, 0x63}, math.MinInt64, math.MaxUint64, 1, true, ""}
 	NormalSchemaTransformTest(t, testSourceSchema, transformer, extensionOneInput7, extensionOneExpected7)
 
 	extensionOneInput8 := normalSchemaInput{`8`, `5`, `"中文"`, `-9223372036854775809`, `18446744073709551616`, `""`, `""`, `""`}
-	extensionOneExpected8 := normalSchemaExpected{8, "5", []byte{0xe4, 0xb8, 0xad, 0xe6, 0x96, 0x87}, 9223372036854775807, 0, 0, false, ""}
+	extensionOneExpected8 := normalSchemaExpected{8, "5", []byte{0xe4, 0xb8, 0xad, 0xe6, 0x96, 0x87}, math.MaxInt64, 0, 0, false, ""}
 	NormalSchemaTransformTest(t, testSourceSchema, transformer, extensionOneInput8, extensionOneExpected8)
 
 	extensionOneInput9 := normalSchemaInput{`9`, `5`, NORMAL_SCHEMA_SPECIAL_CHAR, `1.23`, `1.23`, `" "`, `" "`, `""`}

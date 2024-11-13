@@ -3,6 +3,7 @@ package tests
 import (
 	"encoding/json"
 	"fmt"
+	"math"
 	"testing"
 	"time"
 
@@ -331,11 +332,11 @@ func TestMapSuccessTransform3(t *testing.T) {
 	MapTransformTest3(t, testSourceSchema, transformer, maptest5, maptest5Expected)
 
 	maptest6 := map3Input{`6`, LARGE_STRING, `""`, `-1`, `0`, `1.7976931348623157e+308`, `"False"`, LARGE_STRING}
-	maptest6Expected := map3Expected{6, LARGE_STRING_EXPECTED_OUTPUT, []byte{}, -1, 0, 1.7976931348623157e+308, false, LARGE_STRING_EXPECTED_OUTPUT}
+	maptest6Expected := map3Expected{6, LARGE_STRING_EXPECTED_OUTPUT, []byte{}, -1, 0, math.MaxFloat64, false, LARGE_STRING_EXPECTED_OUTPUT}
 	MapTransformTest3(t, testSourceSchema, transformer, maptest6, maptest6Expected)
 
 	maptest7 := map3Input{`7`, `""`, `" "`, `5`, `5`, `-1.7976931348623157e+308`, `"T"`, `5`}
-	maptest7Expected := map3Expected{7, "", []byte{0x20}, 5, 5, -1.7976931348623157e+308, true, float64(5)}
+	maptest7Expected := map3Expected{7, "", []byte{0x20}, 5, 5, -math.MaxFloat64, true, float64(5)}
 	MapTransformTest3(t, testSourceSchema, transformer, maptest7, maptest7Expected)
 
 	maptest8 := map3Input{`8`, `" "`, `"0"`, `0`, `0`, `-0`, `"F"`, `[]`}
@@ -407,12 +408,12 @@ func TestMapTransformErrorHandle3(t *testing.T) {
 
 	// 以下大於 int64 的數值會變成最小負值，uint64(-1) 會變成 最大uint，小於float64最小值的數值會去掉小數點，bool小於0會變成false，大於0會變成true
 	maptest7 := map3Input{`7`, `5`, `"abc"`, `9223372036854775808`, `-1`, `1.0000000000000001`, `5`, `""`}
-	maptest7Expected := map3Expected{7, "5", []byte{0x61, 0x62, 0x63}, -9223372036854775808, 18446744073709551615, 1, true, ""}
+	maptest7Expected := map3Expected{7, "5", []byte{0x61, 0x62, 0x63}, math.MinInt64, math.MaxUint64, 1, true, ""}
 	MapTransformTest3(t, testSourceSchema, transformer, maptest7, maptest7Expected)
 
 	// 小於int64最小值會被鎖定在最小值，uint大於一定數會變固定值
-	maptest8 := map3Input{`8`, `5`, `"中文"`, `-9223372036854775809`, `18446744073709551615`, `""`, `""`, `""`}
-	maptest8Expected := map3Expected{8, "5", []byte{0xe4, 0xb8, 0xad, 0xe6, 0x96, 0x87}, 9223372036854775807, 18446744073709551615, 0, false, ""}
+	maptest8 := map3Input{`8`, `5`, `"中文"`, `-9223372036854775809`, `18446744073709551616`, `""`, `""`, `""`}
+	maptest8Expected := map3Expected{8, "5", []byte{0xe4, 0xb8, 0xad, 0xe6, 0x96, 0x87}, math.MaxInt64, 0, 0, false, ""}
 	MapTransformTest3(t, testSourceSchema, transformer, maptest8, maptest8Expected)
 
 	// int與uint帶浮點數會被去掉小數點

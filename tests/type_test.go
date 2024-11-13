@@ -86,7 +86,7 @@ var arraySchema9 = `{
     }
 }`
 
-func TestWorngSubtypeWithString(t *testing.T) {
+func TestWorngSubtype(t *testing.T) {
 
 	testSourceSchema := schemer.NewSchema()
 
@@ -114,6 +114,90 @@ func TestWorngSubtypeWithString(t *testing.T) {
 	assert.Error(t, err)
 
 	err = schemer.UnmarshalJSON([]byte(arraySchema9), testSourceSchema)
+	assert.Error(t, err)
+}
+
+func TestWorngtype(t *testing.T) {
+
+	var errorTypeSchema = `{
+		"uint_col":{
+		   "type":"XXX"
+		}
+	}`
+
+	var errorFieldSchema1 = `{
+		"string_col":{
+		   "tpye":"string"
+		}
+	}`
+
+	var errorFieldSchema2 = `{
+		"string_col":{
+		   "type":"string",
+		   "subtype":"string"
+		}
+	}`
+
+	var errorFieldSchema3 = `{
+		"string_col":{
+		   "type":"string",
+		   "precision":"second"
+		}
+	}`
+
+	var errorFieldSchema4 = `{
+		"string_col":{
+		   "type":"int",
+		   "type":"string"
+		}
+	}`
+
+	var errorFieldSchema5 = `{
+		"string_col":{
+		   "XX":"int",
+		   "type":"string"
+		}
+	}`
+
+	var errorFieldSchema6 = `{
+		"string_col":{
+		}
+	}`
+
+	var errorFieldSchema7 = `{
+		"string_col": "string"
+	}`
+
+	var errorFieldSchema8 = `{
+	}`
+
+	testSourceSchema := schemer.NewSchema()
+
+	err := schemer.UnmarshalJSON([]byte(errorTypeSchema), testSourceSchema)
+	assert.Error(t, err)
+
+	err = schemer.UnmarshalJSON([]byte(errorFieldSchema1), testSourceSchema)
+	assert.Error(t, err)
+
+	err = schemer.UnmarshalJSON([]byte(errorFieldSchema2), testSourceSchema)
+	assert.Error(t, err)
+
+	err = schemer.UnmarshalJSON([]byte(errorFieldSchema3), testSourceSchema)
+	assert.Error(t, err)
+
+	err = schemer.UnmarshalJSON([]byte(errorFieldSchema4), testSourceSchema)
+	assert.Error(t, err)
+
+	err = schemer.UnmarshalJSON([]byte(errorFieldSchema5), testSourceSchema)
+	assert.Error(t, err)
+
+	err = schemer.UnmarshalJSON([]byte(errorFieldSchema6), testSourceSchema)
+	assert.Error(t, err)
+
+	err = schemer.UnmarshalJSON([]byte(errorFieldSchema7), testSourceSchema)
+	assert.Error(t, err)
+
+	err = schemer.UnmarshalJSON([]byte(errorFieldSchema8), testSourceSchema)
 	assert.Error(t, err)
 }
 
