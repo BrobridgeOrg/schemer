@@ -1,9 +1,12 @@
-package schemer
+package schemer_test
 
 import (
+	"encoding/json"
 	"testing"
 	"time"
 
+	"github.com/BrobridgeOrg/schemer"
+	goja_runtime "github.com/BrobridgeOrg/schemer/runtime/goja"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -51,45 +54,47 @@ var testDest = `{
 
 func TestTransformerScript(t *testing.T) {
 
-	testSourceSchema := NewSchema()
-	err := UnmarshalJSON([]byte(testSource), testSourceSchema)
+	testSourceSchema := schemer.NewSchema()
+	err := schemer.UnmarshalJSON([]byte(testSource), testSourceSchema)
 	if err != nil {
 		t.Error(err)
 	}
 
-	testDestSchema := NewSchema()
-	err = UnmarshalJSON([]byte(testDest), testDestSchema)
+	testDestSchema := schemer.NewSchema()
+	err = schemer.UnmarshalJSON([]byte(testDest), testDestSchema)
 	if err != nil {
 		t.Error(err)
 	}
 
 	// Create transformer
-	transformer := NewTransformer(testSourceSchema, testDestSchema)
+	transformer := schemer.NewTransformer(testSourceSchema, testDestSchema,
+		schemer.WithRuntime(goja_runtime.NewRuntime()),
+	)
 
 	// Set transform script
-	err = transformer.SetScript(`
-		Invalid script
-`)
+	err = transformer.SetScript(`Invalid script`)
 	//	t.Log(err)
 	assert.NotNil(t, err)
 }
 
 func TestTransformer(t *testing.T) {
 
-	testSourceSchema := NewSchema()
-	err := UnmarshalJSON([]byte(testSource), testSourceSchema)
+	testSourceSchema := schemer.NewSchema()
+	err := schemer.UnmarshalJSON([]byte(testSource), testSourceSchema)
 	if err != nil {
 		t.Error(err)
 	}
 
-	testDestSchema := NewSchema()
-	err = UnmarshalJSON([]byte(testDest), testDestSchema)
+	testDestSchema := schemer.NewSchema()
+	err = schemer.UnmarshalJSON([]byte(testDest), testDestSchema)
 	if err != nil {
 		t.Error(err)
 	}
 
 	// Create transformer
-	transformer := NewTransformer(testSourceSchema, testDestSchema)
+	transformer := schemer.NewTransformer(testSourceSchema, testDestSchema,
+		schemer.WithRuntime(goja_runtime.NewRuntime()),
+	)
 
 	// Set transform script
 	transformer.SetScript(`
@@ -136,14 +141,16 @@ func TestTransformer(t *testing.T) {
 
 func TestTransformerWithoutSourceSchema(t *testing.T) {
 
-	testDestSchema := NewSchema()
-	err := UnmarshalJSON([]byte(testDest), testDestSchema)
+	testDestSchema := schemer.NewSchema()
+	err := schemer.UnmarshalJSON([]byte(testDest), testDestSchema)
 	if err != nil {
 		t.Error(err)
 	}
 
 	// Create transformer
-	transformer := NewTransformer(nil, testDestSchema)
+	transformer := schemer.NewTransformer(nil, testDestSchema,
+		schemer.WithRuntime(goja_runtime.NewRuntime()),
+	)
 
 	// Set transform script
 	transformer.SetScript(`
@@ -191,7 +198,9 @@ func TestTransformerWithoutSourceSchema(t *testing.T) {
 func TestTransformerWithoutSchema(t *testing.T) {
 
 	// Create transformer
-	transformer := NewTransformer(nil, nil)
+	transformer := schemer.NewTransformer(nil, nil,
+		schemer.WithRuntime(goja_runtime.NewRuntime()),
+	)
 
 	// Set transform script
 	transformer.SetScript(`
@@ -238,20 +247,22 @@ func TestTransformerWithoutSchema(t *testing.T) {
 
 func TestTransformerEnv(t *testing.T) {
 
-	testSourceSchema := NewSchema()
-	err := UnmarshalJSON([]byte(testSource), testSourceSchema)
+	testSourceSchema := schemer.NewSchema()
+	err := schemer.UnmarshalJSON([]byte(testSource), testSourceSchema)
 	if err != nil {
 		t.Error(err)
 	}
 
-	testDestSchema := NewSchema()
-	err = UnmarshalJSON([]byte(testDest), testDestSchema)
+	testDestSchema := schemer.NewSchema()
+	err = schemer.UnmarshalJSON([]byte(testDest), testDestSchema)
 	if err != nil {
 		t.Error(err)
 	}
 
 	// Create transformer
-	transformer := NewTransformer(testSourceSchema, testDestSchema)
+	transformer := schemer.NewTransformer(testSourceSchema, testDestSchema,
+		schemer.WithRuntime(goja_runtime.NewRuntime()),
+	)
 
 	// Set transform script
 	transformer.SetScript(`
@@ -289,20 +300,22 @@ func TestTransformerEnv(t *testing.T) {
 
 func TestTransformer_MultipleResults(t *testing.T) {
 
-	testSourceSchema := NewSchema()
-	err := UnmarshalJSON([]byte(testSource), testSourceSchema)
+	testSourceSchema := schemer.NewSchema()
+	err := schemer.UnmarshalJSON([]byte(testSource), testSourceSchema)
 	if err != nil {
 		t.Error(err)
 	}
 
-	testDestSchema := NewSchema()
-	err = UnmarshalJSON([]byte(testDest), testDestSchema)
+	testDestSchema := schemer.NewSchema()
+	err = schemer.UnmarshalJSON([]byte(testDest), testDestSchema)
 	if err != nil {
 		t.Error(err)
 	}
 
 	// Create transformer
-	transformer := NewTransformer(testSourceSchema, testDestSchema)
+	transformer := schemer.NewTransformer(testSourceSchema, testDestSchema,
+		schemer.WithRuntime(goja_runtime.NewRuntime()),
+	)
 
 	// Set transform script
 	transformer.SetScript(`
@@ -341,20 +354,22 @@ func TestTransformer_MultipleResults(t *testing.T) {
 
 func TestTransformer_Default(t *testing.T) {
 
-	testSourceSchema := NewSchema()
-	err := UnmarshalJSON([]byte(testSource), testSourceSchema)
+	testSourceSchema := schemer.NewSchema()
+	err := schemer.UnmarshalJSON([]byte(testSource), testSourceSchema)
 	if err != nil {
 		t.Error(err)
 	}
 
-	testDestSchema := NewSchema()
-	err = UnmarshalJSON([]byte(testDest), testDestSchema)
+	testDestSchema := schemer.NewSchema()
+	err = schemer.UnmarshalJSON([]byte(testDest), testDestSchema)
 	if err != nil {
 		t.Error(err)
 	}
 
 	// Create transformer
-	transformer := NewTransformer(testSourceSchema, testDestSchema)
+	transformer := schemer.NewTransformer(testSourceSchema, testDestSchema,
+		schemer.WithRuntime(goja_runtime.NewRuntime()),
+	)
 
 	// Transform
 	rawData := `{
@@ -382,20 +397,22 @@ func TestTransformer_Default(t *testing.T) {
 
 func TestTransformer_NullResult(t *testing.T) {
 
-	testSourceSchema := NewSchema()
-	err := UnmarshalJSON([]byte(testSource), testSourceSchema)
+	testSourceSchema := schemer.NewSchema()
+	err := schemer.UnmarshalJSON([]byte(testSource), testSourceSchema)
 	if err != nil {
 		t.Error(err)
 	}
 
-	testDestSchema := NewSchema()
-	err = UnmarshalJSON([]byte(testDest), testDestSchema)
+	testDestSchema := schemer.NewSchema()
+	err = schemer.UnmarshalJSON([]byte(testDest), testDestSchema)
 	if err != nil {
 		t.Error(err)
 	}
 
 	// Create transformer
-	transformer := NewTransformer(testSourceSchema, testDestSchema)
+	transformer := schemer.NewTransformer(testSourceSchema, testDestSchema,
+		schemer.WithRuntime(goja_runtime.NewRuntime()),
+	)
 
 	// Set transform script
 	transformer.SetScript(`
@@ -422,20 +439,22 @@ func TestTransformer_NullResult(t *testing.T) {
 
 func TestTransformer_NestedStructure(t *testing.T) {
 
-	sourceSchema := NewSchema()
-	err := UnmarshalJSON([]byte(testSource), sourceSchema)
+	sourceSchema := schemer.NewSchema()
+	err := schemer.UnmarshalJSON([]byte(testSource), sourceSchema)
 	if err != nil {
 		t.Error(err)
 	}
 
-	destSchema := NewSchema()
-	err = UnmarshalJSON([]byte(testDest), destSchema)
+	destSchema := schemer.NewSchema()
+	err = schemer.UnmarshalJSON([]byte(testDest), destSchema)
 	if err != nil {
 		t.Error(err)
 	}
 
 	// Create transformer
-	transformer := NewTransformer(sourceSchema, destSchema)
+	transformer := schemer.NewTransformer(sourceSchema, destSchema,
+		schemer.WithRuntime(goja_runtime.NewRuntime()),
+	)
 
 	// Set transform script
 	transformer.SetScript(`
@@ -474,20 +493,22 @@ func TestTransformer_NestedStructure(t *testing.T) {
 
 func TestTransformer_Source_Binary(t *testing.T) {
 
-	sourceSchema := NewSchema()
-	err := UnmarshalJSON([]byte(testSource), sourceSchema)
+	sourceSchema := schemer.NewSchema()
+	err := schemer.UnmarshalJSON([]byte(testSource), sourceSchema)
 	if err != nil {
 		t.Error(err)
 	}
 
-	destSchema := NewSchema()
-	err = UnmarshalJSON([]byte(testDest), destSchema)
+	destSchema := schemer.NewSchema()
+	err = schemer.UnmarshalJSON([]byte(testDest), destSchema)
 	if err != nil {
 		t.Error(err)
 	}
 
 	// Create transformer
-	transformer := NewTransformer(sourceSchema, destSchema)
+	transformer := schemer.NewTransformer(sourceSchema, destSchema,
+		schemer.WithRuntime(goja_runtime.NewRuntime()),
+	)
 
 	// Set transform script
 	transformer.SetScript(`
@@ -532,20 +553,22 @@ func TestTransformer_Source_Binary(t *testing.T) {
 
 func TestTransformer_Source_Integer(t *testing.T) {
 
-	sourceSchema := NewSchema()
-	err := UnmarshalJSON([]byte(testSource), sourceSchema)
+	sourceSchema := schemer.NewSchema()
+	err := schemer.UnmarshalJSON([]byte(testSource), sourceSchema)
 	if err != nil {
 		t.Error(err)
 	}
 
-	destSchema := NewSchema()
-	err = UnmarshalJSON([]byte(testDest), destSchema)
+	destSchema := schemer.NewSchema()
+	err = schemer.UnmarshalJSON([]byte(testDest), destSchema)
 	if err != nil {
 		t.Error(err)
 	}
 
 	// Create transformer
-	transformer := NewTransformer(sourceSchema, destSchema)
+	transformer := schemer.NewTransformer(sourceSchema, destSchema,
+		schemer.WithRuntime(goja_runtime.NewRuntime()),
+	)
 
 	// Set transform script
 	transformer.SetScript(`
@@ -588,20 +611,22 @@ func TestTransformer_Source_Integer(t *testing.T) {
 
 func TestTransformer_Source_UnsignedInteger(t *testing.T) {
 
-	sourceSchema := NewSchema()
-	err := UnmarshalJSON([]byte(testSource), sourceSchema)
+	sourceSchema := schemer.NewSchema()
+	err := schemer.UnmarshalJSON([]byte(testSource), sourceSchema)
 	if err != nil {
 		t.Error(err)
 	}
 
-	destSchema := NewSchema()
-	err = UnmarshalJSON([]byte(testDest), destSchema)
+	destSchema := schemer.NewSchema()
+	err = schemer.UnmarshalJSON([]byte(testDest), destSchema)
 	if err != nil {
 		t.Error(err)
 	}
 
 	// Create transformer
-	transformer := NewTransformer(sourceSchema, destSchema)
+	transformer := schemer.NewTransformer(sourceSchema, destSchema,
+		schemer.WithRuntime(goja_runtime.NewRuntime()),
+	)
 
 	// Set transform script
 	transformer.SetScript(`
@@ -644,20 +669,22 @@ func TestTransformer_Source_UnsignedInteger(t *testing.T) {
 
 func TestTransformer_Source_Float(t *testing.T) {
 
-	sourceSchema := NewSchema()
-	err := UnmarshalJSON([]byte(testSource), sourceSchema)
+	sourceSchema := schemer.NewSchema()
+	err := schemer.UnmarshalJSON([]byte(testSource), sourceSchema)
 	if err != nil {
 		t.Error(err)
 	}
 
-	destSchema := NewSchema()
-	err = UnmarshalJSON([]byte(testDest), destSchema)
+	destSchema := schemer.NewSchema()
+	err = schemer.UnmarshalJSON([]byte(testDest), destSchema)
 	if err != nil {
 		t.Error(err)
 	}
 
 	// Create transformer
-	transformer := NewTransformer(sourceSchema, destSchema)
+	transformer := schemer.NewTransformer(sourceSchema, destSchema,
+		schemer.WithRuntime(goja_runtime.NewRuntime()),
+	)
 
 	// Set transform script
 	transformer.SetScript(`
@@ -700,20 +727,22 @@ func TestTransformer_Source_Float(t *testing.T) {
 
 func TestTransformer_Source_String(t *testing.T) {
 
-	sourceSchema := NewSchema()
-	err := UnmarshalJSON([]byte(testSource), sourceSchema)
+	sourceSchema := schemer.NewSchema()
+	err := schemer.UnmarshalJSON([]byte(testSource), sourceSchema)
 	if err != nil {
 		t.Error(err)
 	}
 
-	destSchema := NewSchema()
-	err = UnmarshalJSON([]byte(testDest), destSchema)
+	destSchema := schemer.NewSchema()
+	err = schemer.UnmarshalJSON([]byte(testDest), destSchema)
 	if err != nil {
 		t.Error(err)
 	}
 
 	// Create transformer
-	transformer := NewTransformer(sourceSchema, destSchema)
+	transformer := schemer.NewTransformer(sourceSchema, destSchema,
+		schemer.WithRuntime(goja_runtime.NewRuntime()),
+	)
 
 	// Set transform script
 	transformer.SetScript(`
@@ -762,20 +791,22 @@ func TestTransformer_Source_String(t *testing.T) {
 
 func TestTransformer_Source_Bool_With_True(t *testing.T) {
 
-	sourceSchema := NewSchema()
-	err := UnmarshalJSON([]byte(testSource), sourceSchema)
+	sourceSchema := schemer.NewSchema()
+	err := schemer.UnmarshalJSON([]byte(testSource), sourceSchema)
 	if err != nil {
 		t.Error(err)
 	}
 
-	destSchema := NewSchema()
-	err = UnmarshalJSON([]byte(testDest), destSchema)
+	destSchema := schemer.NewSchema()
+	err = schemer.UnmarshalJSON([]byte(testDest), destSchema)
 	if err != nil {
 		t.Error(err)
 	}
 
 	// Create transformer
-	transformer := NewTransformer(sourceSchema, destSchema)
+	transformer := schemer.NewTransformer(sourceSchema, destSchema,
+		schemer.WithRuntime(goja_runtime.NewRuntime()),
+	)
 
 	// Set transform script
 	transformer.SetScript(`
@@ -818,20 +849,22 @@ func TestTransformer_Source_Bool_With_True(t *testing.T) {
 
 func TestTransformer_Source_Bool_With_False(t *testing.T) {
 
-	sourceSchema := NewSchema()
-	err := UnmarshalJSON([]byte(testSource), sourceSchema)
+	sourceSchema := schemer.NewSchema()
+	err := schemer.UnmarshalJSON([]byte(testSource), sourceSchema)
 	if err != nil {
 		t.Error(err)
 	}
 
-	destSchema := NewSchema()
-	err = UnmarshalJSON([]byte(testDest), destSchema)
+	destSchema := schemer.NewSchema()
+	err = schemer.UnmarshalJSON([]byte(testDest), destSchema)
 	if err != nil {
 		t.Error(err)
 	}
 
 	// Create transformer
-	transformer := NewTransformer(sourceSchema, destSchema)
+	transformer := schemer.NewTransformer(sourceSchema, destSchema,
+		schemer.WithRuntime(goja_runtime.NewRuntime()),
+	)
 
 	// Set transform script
 	transformer.SetScript(`
@@ -874,20 +907,22 @@ func TestTransformer_Source_Bool_With_False(t *testing.T) {
 
 func TestTransformer_Source_Time(t *testing.T) {
 
-	sourceSchema := NewSchema()
-	err := UnmarshalJSON([]byte(testSource), sourceSchema)
+	sourceSchema := schemer.NewSchema()
+	err := schemer.UnmarshalJSON([]byte(testSource), sourceSchema)
 	if err != nil {
 		t.Error(err)
 	}
 
-	destSchema := NewSchema()
-	err = UnmarshalJSON([]byte(testDest), destSchema)
+	destSchema := schemer.NewSchema()
+	err = schemer.UnmarshalJSON([]byte(testDest), destSchema)
 	if err != nil {
 		t.Error(err)
 	}
 
 	// Create transformer
-	transformer := NewTransformer(sourceSchema, destSchema)
+	transformer := schemer.NewTransformer(sourceSchema, destSchema,
+		schemer.WithRuntime(goja_runtime.NewRuntime()),
+	)
 
 	// Set transform script
 	transformer.SetScript(`
@@ -934,14 +969,16 @@ func TestTransformer_Source_Time(t *testing.T) {
 
 func TestTransformer_Source_Time_Dest_Empty(t *testing.T) {
 
-	sourceSchema := NewSchema()
-	err := UnmarshalJSON([]byte(testSource), sourceSchema)
+	sourceSchema := schemer.NewSchema()
+	err := schemer.UnmarshalJSON([]byte(testSource), sourceSchema)
 	if err != nil {
 		t.Error(err)
 	}
 
 	// Create transformer
-	transformer := NewTransformer(sourceSchema, nil)
+	transformer := schemer.NewTransformer(sourceSchema, nil,
+		schemer.WithRuntime(goja_runtime.NewRuntime()),
+	)
 
 	// Set transform script
 	transformer.SetScript(`
@@ -974,20 +1011,22 @@ func TestTransformer_Source_Time_Dest_Empty(t *testing.T) {
 
 func TestTransformer_Source_MicroTime(t *testing.T) {
 
-	sourceSchema := NewSchema()
-	err := UnmarshalJSON([]byte(testSource), sourceSchema)
+	sourceSchema := schemer.NewSchema()
+	err := schemer.UnmarshalJSON([]byte(testSource), sourceSchema)
 	if !assert.Nil(t, err) {
 		return
 	}
 
-	destSchema := NewSchema()
-	err = UnmarshalJSON([]byte(testDest), destSchema)
+	destSchema := schemer.NewSchema()
+	err = schemer.UnmarshalJSON([]byte(testDest), destSchema)
 	if !assert.Nil(t, err) {
 		return
 	}
 
 	// Create transformer
-	transformer := NewTransformer(sourceSchema, destSchema)
+	transformer := schemer.NewTransformer(sourceSchema, destSchema,
+		schemer.WithRuntime(goja_runtime.NewRuntime()),
+	)
 
 	// Set transform script
 	transformer.SetScript(`
@@ -1034,20 +1073,22 @@ func TestTransformer_Source_MicroTime(t *testing.T) {
 
 func TestTransformer_Source_Null(t *testing.T) {
 
-	sourceSchema := NewSchema()
-	err := UnmarshalJSON([]byte(testSource), sourceSchema)
+	sourceSchema := schemer.NewSchema()
+	err := schemer.UnmarshalJSON([]byte(testSource), sourceSchema)
 	if err != nil {
 		t.Error(err)
 	}
 
-	destSchema := NewSchema()
-	err = UnmarshalJSON([]byte(testDest), destSchema)
+	destSchema := schemer.NewSchema()
+	err = schemer.UnmarshalJSON([]byte(testDest), destSchema)
 	if err != nil {
 		t.Error(err)
 	}
 
 	// Create transformer
-	transformer := NewTransformer(sourceSchema, destSchema)
+	transformer := schemer.NewTransformer(sourceSchema, destSchema,
+		schemer.WithRuntime(goja_runtime.NewRuntime()),
+	)
 
 	// Set transform script
 	transformer.SetScript(`
@@ -1096,20 +1137,22 @@ func TestTransformer_Source_Null(t *testing.T) {
 
 func TestTransformer_Source_TimeString(t *testing.T) {
 
-	sourceSchema := NewSchema()
-	err := UnmarshalJSON([]byte(testSource), sourceSchema)
+	sourceSchema := schemer.NewSchema()
+	err := schemer.UnmarshalJSON([]byte(testSource), sourceSchema)
 	if err != nil {
 		t.Error(err)
 	}
 
-	destSchema := NewSchema()
-	err = UnmarshalJSON([]byte(testDest), destSchema)
+	destSchema := schemer.NewSchema()
+	err = schemer.UnmarshalJSON([]byte(testDest), destSchema)
 	if err != nil {
 		t.Error(err)
 	}
 
 	// Create transformer
-	transformer := NewTransformer(sourceSchema, destSchema)
+	transformer := schemer.NewTransformer(sourceSchema, destSchema,
+		schemer.WithRuntime(goja_runtime.NewRuntime()),
+	)
 
 	// Set transform script
 	transformer.SetScript(`
@@ -1159,20 +1202,22 @@ func TestTransformer_Source_TimeString(t *testing.T) {
 
 func TestTransformer_Source_TimeEmptyString(t *testing.T) {
 
-	sourceSchema := NewSchema()
-	err := UnmarshalJSON([]byte(testSource), sourceSchema)
+	sourceSchema := schemer.NewSchema()
+	err := schemer.UnmarshalJSON([]byte(testSource), sourceSchema)
 	if err != nil {
 		t.Error(err)
 	}
 
-	destSchema := NewSchema()
-	err = UnmarshalJSON([]byte(testDest), destSchema)
+	destSchema := schemer.NewSchema()
+	err = schemer.UnmarshalJSON([]byte(testDest), destSchema)
 	if err != nil {
 		t.Error(err)
 	}
 
 	// Create transformer
-	transformer := NewTransformer(sourceSchema, destSchema)
+	transformer := schemer.NewTransformer(sourceSchema, destSchema,
+		schemer.WithRuntime(goja_runtime.NewRuntime()),
+	)
 
 	// Set transform script
 	transformer.SetScript(`

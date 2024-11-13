@@ -1,4 +1,4 @@
-package schemer
+package goja_runtime
 
 import (
 	"fmt"
@@ -8,31 +8,24 @@ import (
 	"github.com/dop251/goja"
 )
 
-type TransformerScriptImpl struct {
-}
+func (r *Runtime) initNativeFunctions() error {
 
-func NewTransformerScript() *TransformerScriptImpl {
-	return &TransformerScriptImpl{}
-}
-
-func (ts *TransformerScriptImpl) injectFuncs(vm *goja.Runtime) error {
-
-	vm.Set("prepareRefs", func(call goja.FunctionCall) goja.Value {
+	r.vm.Set("prepareRefs", func(call goja.FunctionCall) goja.Value {
 		input := call.Argument(0).Export().(map[string]interface{})
-		result := ts.PrepareRefs(input)
-		return vm.ToValue(result)
+		result := r.nativePrepareRefs(input)
+		return r.vm.ToValue(result)
 	})
 
-	vm.Set("scanStruct", func(call goja.FunctionCall) goja.Value {
-		input := call.Argument(0).ToObject(vm)
-		ts.ScanStruct(vm, input)
+	r.vm.Set("scanStruct", func(call goja.FunctionCall) goja.Value {
+		input := call.Argument(0).ToObject(r.vm)
+		r.nativeScanStruct(r.vm, input)
 		return goja.Undefined()
 	})
 
 	return nil
 }
 
-func (ts *TransformerScriptImpl) PrepareRefs(source map[string]interface{}) map[string]interface{} {
+func (r *Runtime) nativePrepareRefs(source map[string]interface{}) map[string]interface{} {
 	result := make(map[string]interface{})
 
 	for sourceKey, value := range source {
@@ -61,7 +54,7 @@ func (ts *TransformerScriptImpl) PrepareRefs(source map[string]interface{}) map[
 	return result
 }
 
-func (ts *TransformerScriptImpl) ScanStruct(vm *goja.Runtime, obj *goja.Object) {
+func (r *Runtime) nativeScanStruct(vm *goja.Runtime, obj *goja.Object) {
 
 	// Get all keys of the object
 	keys := obj.Keys()
@@ -85,12 +78,12 @@ func (ts *TransformerScriptImpl) ScanStruct(vm *goja.Runtime, obj *goja.Object) 
 					// Set undefined elements to null or delete them as per requirement
 					arrayObj.Set(fmt.Sprint(i), nil)
 				} else {
-					ts.ScanStruct(vm, elem.ToObject(vm))
+					r.nativeScanStruct(vm, elem.ToObject(vm))
 				}
 			}
 		} else if value.ExportType().Kind() == reflect.Map {
 			// If the value is an object, recursively call scanStruct
-			ts.ScanStruct(vm, value.ToObject(vm))
+			r.nativeScanStruct(vm, value.ToObject(vm))
 		}
 	}
 }

@@ -1,4 +1,4 @@
-package schemer
+package goja_runtime
 
 import (
 	"testing"
@@ -7,7 +7,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestTransformerScript_ScanStruct(t *testing.T) {
+func TestRuntime_NativeFunctions_ScanStruct(t *testing.T) {
 
 	script := `function test() {
 		let input = {
@@ -31,13 +31,15 @@ func TestTransformerScript_ScanStruct(t *testing.T) {
 }`
 
 	// Initialize VM and inject functions
-	vm := goja.New()
-	ts := NewTransformerScript()
-	ts.injectFuncs(vm)
-	vm.RunString(script)
+	r := NewRuntime()
+	err := r.Compile(script)
+	if !assert.Nil(t, err) {
+		t.Error(err)
+		return
+	}
 
 	// Run test function
-	testFunc, _ := goja.AssertFunction(vm.Get("test"))
+	testFunc, _ := goja.AssertFunction(r.vm.Get("test"))
 	res, err := testFunc(goja.Undefined())
 	if !assert.Nil(t, err) {
 		t.Error(err)
