@@ -201,12 +201,12 @@ func getBoolValue(def *Definition, data interface{}) (bool, error) {
 func getStringValue(def *Definition, data interface{}) (string, error) {
 
 	switch d := data.(type) {
+	case string:
+		return d, nil
 	case int64:
 		return fmt.Sprintf("%d", d), nil
 	case uint64:
 		return fmt.Sprintf("%d", d), nil
-	case string:
-		return d, nil
 	case bool:
 		return fmt.Sprintf("%t", d), nil
 	case float64:
