@@ -19,10 +19,8 @@ func WithRuntime(runtime Runtime) func(*Transformer) {
 }
 
 type Transformer struct {
-	source *Schema
-	dest   *Schema
-	script string
-
+	source  *Schema
+	dest    *Schema
 	runtime Runtime
 }
 
@@ -118,9 +116,9 @@ func (t *Transformer) prepareScript(script string) string {
 
 func (t *Transformer) SetScript(script string) error {
 
-	t.script = t.prepareScript(script)
+	fullScript := t.prepareScript(script)
 
-	err := t.runtime.Compile(t.script)
+	err := t.runtime.Compile(fullScript)
 	if err != nil {
 		return err
 	}
