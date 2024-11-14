@@ -1,9 +1,5 @@
 package schemer
 
-import (
-	"reflect"
-)
-
 type Record struct {
 	schema *Schema
 	raw    map[string]interface{}
@@ -56,11 +52,17 @@ func (r *Record) getValue(parts []string) interface{} {
 			obj = v[key]
 			val = obj
 
-			if reflect.TypeOf(obj).Kind() == reflect.Slice && index != -1 {
-				obj = obj.([]interface{})[index]
-				val = obj
+			if d, ok := obj.([]interface{}); ok && index != -1 {
+				obj = d[index]
+				val = d
 			}
 
+			/*
+				if reflect.TypeOf(obj).Kind() == reflect.Slice && index != -1 {
+					obj = obj.([]interface{})[index]
+					val = obj
+				}
+			*/
 			continue
 		}
 
