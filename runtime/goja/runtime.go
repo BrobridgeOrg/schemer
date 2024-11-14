@@ -2,7 +2,6 @@ package goja_runtime
 
 import (
 	"fmt"
-	"reflect"
 
 	"github.com/BrobridgeOrg/schemer"
 	"github.com/dop251/goja"
@@ -87,15 +86,14 @@ func (r *Runtime) Execute(sourceSchema *schemer.Schema, data map[string]interfac
 	result = res.Export()
 
 	// returned data is an array
-	if reflect.ValueOf(result).Kind() == reflect.Slice {
-
-		v := result.([]interface{})
+	switch d := result.(type) {
+	case []interface{}:
 
 		// Prepare array
-		returnedValues := make([]map[string]interface{}, len(v))
+		returnedValues := make([]map[string]interface{}, len(d))
 
-		for i, d := range v {
-			v := d.(map[string]interface{})
+		for i, ele := range d {
+			v := ele.(map[string]interface{})
 
 			// Deal with JavaScript Object
 			err := r.handleMapValue(v)
@@ -107,18 +105,57 @@ func (r *Runtime) Execute(sourceSchema *schemer.Schema, data map[string]interfac
 		}
 
 		return returnedValues, nil
+	case map[string]interface{}:
+
+		// Deal with JavaScript Object
+		err = r.handleMapValue(d)
+		if err != nil {
+			return nil, err
+		}
+
+		return []map[string]interface{}{
+			d,
+		}, nil
+
 	}
 
-	// returned data is an object
-	v := result.(map[string]interface{})
+	return []map[string]interface{}{}, nil
 
-	// Deal with JavaScript Object
-	err = r.handleMapValue(v)
-	if err != nil {
-		return nil, err
-	}
+	/*
+	   if reflect.ValueOf(result).Kind() == reflect.Slice {
 
-	return []map[string]interface{}{
-		v,
-	}, nil
+	   		v := result.([]interface{})
+
+	   		// Prepare array
+	   		returnedValues := make([]map[string]interface{}, len(v))
+
+	   		for i, d := range v {
+	   			v := d.(map[string]interface{})
+
+	   			// Deal with JavaScript Object
+	   			err := r.handleMapValue(v)
+	   			if err != nil {
+	   				return nil, err
+	   			}
+
+	   			returnedValues[i] = v
+	   		}
+
+	   		return returnedValues, nil
+	   	}
+
+	   // returned data is an object
+	   v := result.(map[string]interface{})
+
+	   // Deal with JavaScript Object
+	   err = r.handleMapValue(v)
+
+	   	if err != nil {
+	   		return nil, err
+	   	}
+
+	   	return []map[string]interface{}{
+	   		v,
+	   	}, nil
+	*/
 }
