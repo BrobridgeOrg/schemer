@@ -1,7 +1,6 @@
 package goja_runtime
 
 import (
-	"reflect"
 	"time"
 
 	"github.com/BrobridgeOrg/schemer"
@@ -12,29 +11,43 @@ import (
 func (r *Runtime) handleMapValue(returnedValue map[string]interface{}) error {
 
 	for key, value := range returnedValue {
-		v := reflect.ValueOf(value)
-		switch v.Kind() {
-		/*
-			case reflect.Slice:
-				err := t.handleArrayValue(value.([]interface{}))
-				if err != nil {
-					return err
-				}
-		*/
-		case reflect.Map:
-			err := r.handleMapValue(value.(map[string]interface{}))
+
+		switch d := value.(type) {
+		case map[string]interface{}:
+			err := r.handleMapValue(d)
 			if err != nil {
 				return err
 			}
-		default:
+		case *goja.Object:
 			// Convert Data object to time.Time
-			switch d := value.(type) {
-			case *goja.Object:
-				if value.(*goja.Object).ClassName() == "Date" {
-					returnedValue[key] = d.Export()
-				}
+			if d.ClassName() == "Date" {
+				returnedValue[key] = d.Export()
 			}
 		}
+
+		/*
+					v := reflect.ValueOf(value)
+					switch v.Kind() {
+			//			case reflect.Slice:
+			//				err := t.handleArrayValue(value.([]interface{}))
+			//				if err != nil {
+			//					return err
+			//				}
+					case reflect.Map:
+						err := r.handleMapValue(value.(map[string]interface{}))
+						if err != nil {
+							return err
+						}
+					default:
+						// Convert Data object to time.Time
+						switch d := value.(type) {
+						case *goja.Object:
+							if d.ClassName() == "Date" {
+								returnedValue[key] = d.Export()
+							}
+						}
+					}
+		*/
 	}
 
 	return nil
