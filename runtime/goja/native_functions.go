@@ -1,8 +1,8 @@
 package goja_runtime
 
 import (
-	"fmt"
 	"reflect"
+	"strconv"
 	"strings"
 
 	"github.com/dop251/goja"
@@ -72,11 +72,13 @@ func (r *Runtime) nativeScanStruct(vm *goja.Runtime, obj *goja.Object) {
 			arrayObj := value.ToObject(vm)
 			length := int(arrayObj.Get("length").ToInteger())
 			for i := 0; i < length; i++ {
-				elem := arrayObj.Get(fmt.Sprint(i))
+
+				key := strconv.Itoa(i)
+				elem := arrayObj.Get(key)
 
 				if goja.IsUndefined(elem) || goja.IsNaN(elem) || goja.IsInfinity(elem) || goja.IsNull(elem) {
 					// Set undefined elements to null or delete them as per requirement
-					arrayObj.Set(fmt.Sprint(i), nil)
+					arrayObj.Set(key, nil)
 				} else {
 					r.nativeScanStruct(vm, elem.ToObject(vm))
 				}
