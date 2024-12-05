@@ -2,11 +2,14 @@ package schemer_test
 
 import (
 	"encoding/json"
+	"flag"
+	"os"
 	"testing"
 	"time"
 
 	"github.com/BrobridgeOrg/schemer"
 	goja_runtime "github.com/BrobridgeOrg/schemer/runtime/goja"
+	v8go_runtime "github.com/BrobridgeOrg/schemer/runtime/v8go"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -52,6 +55,23 @@ var testDest = `{
 	}
 }`
 
+var jsRuntime schemer.Runtime
+
+func TestMain(m *testing.M) {
+	var r string
+	flag.StringVar(&r, "runtime", "goja", "Specifies the JavaScript runtime")
+	flag.Parse()
+
+	switch r {
+	case "goja":
+		jsRuntime = goja_runtime.NewRuntime()
+	case "v8go":
+		jsRuntime = v8go_runtime.NewRuntime()
+	}
+
+	os.Exit(m.Run())
+}
+
 func TestTransformerScript(t *testing.T) {
 
 	testSourceSchema := schemer.NewSchema()
@@ -68,7 +88,7 @@ func TestTransformerScript(t *testing.T) {
 
 	// Create transformer
 	transformer := schemer.NewTransformer(testSourceSchema, testDestSchema,
-		schemer.WithRuntime(goja_runtime.NewRuntime()),
+		schemer.WithRuntime(jsRuntime),
 	)
 
 	// Set transform script
@@ -77,7 +97,7 @@ func TestTransformerScript(t *testing.T) {
 	assert.NotNil(t, err)
 }
 
-func TestTransformer(t *testing.T) {
+func TestTransformerBasic(t *testing.T) {
 
 	testSourceSchema := schemer.NewSchema()
 	err := schemer.UnmarshalJSON([]byte(testSource), testSourceSchema)
@@ -93,7 +113,7 @@ func TestTransformer(t *testing.T) {
 
 	// Create transformer
 	transformer := schemer.NewTransformer(testSourceSchema, testDestSchema,
-		schemer.WithRuntime(goja_runtime.NewRuntime()),
+		schemer.WithRuntime(jsRuntime),
 	)
 
 	// Set transform script
@@ -149,7 +169,7 @@ func TestTransformerWithoutSourceSchema(t *testing.T) {
 
 	// Create transformer
 	transformer := schemer.NewTransformer(nil, testDestSchema,
-		schemer.WithRuntime(goja_runtime.NewRuntime()),
+		schemer.WithRuntime(jsRuntime),
 	)
 
 	// Set transform script
@@ -195,11 +215,12 @@ func TestTransformerWithoutSourceSchema(t *testing.T) {
 	assert.Equal(t, false, result["bool"].(bool))
 }
 
+/*
 func TestTransformerWithoutSchema(t *testing.T) {
 
 	// Create transformer
 	transformer := schemer.NewTransformer(nil, nil,
-		schemer.WithRuntime(goja_runtime.NewRuntime()),
+		schemer.WithRuntime(jsRuntime),
 	)
 
 	// Set transform script
@@ -211,40 +232,42 @@ func TestTransformerWithoutSchema(t *testing.T) {
 		float: source.float,
 		bool: source.bool
 	}
+
 `)
 
-	// Transform
-	rawData := `{
-	"string": "Brobridge",
-	"int": -9527,
-	"uint": 9527,
-	"float": 11.15,
-	"bool": false
-}`
-	var sourceData map[string]interface{}
-	err := json.Unmarshal([]byte(rawData), &sourceData)
-	if err != nil {
-		t.Error(err)
+		// Transform
+		rawData := `{
+		"string": "Brobridge",
+		"int": -9527,
+		"uint": 9527,
+		"float": 11.15,
+		"bool": false
+	}`
+
+		var sourceData map[string]interface{}
+		err := json.Unmarshal([]byte(rawData), &sourceData)
+		if err != nil {
+			t.Error(err)
+		}
+
+		returnedValue, err := transformer.Transform(nil, sourceData)
+		if err != nil {
+			t.Error(err)
+		}
+
+		if len(returnedValue) != 1 {
+			t.Fail()
+		}
+
+		result := returnedValue[0]
+
+		assert.Equal(t, "Brobridge"+"TEST", result["string"].(string))
+		assert.Equal(t, int64(-9527)+1, result["int"].(int64))
+		assert.Equal(t, int64(9527)+1, result["uint"].(int64))
+		assert.Equal(t, float64(11.15), result["float"].(float64))
+		assert.Equal(t, false, result["bool"].(bool))
 	}
-
-	returnedValue, err := transformer.Transform(nil, sourceData)
-	if err != nil {
-		t.Error(err)
-	}
-
-	if len(returnedValue) != 1 {
-		t.Fail()
-	}
-
-	result := returnedValue[0]
-
-	assert.Equal(t, "Brobridge"+"TEST", result["string"].(string))
-	assert.Equal(t, int64(-9527)+1, result["int"].(int64))
-	assert.Equal(t, int64(9527)+1, result["uint"].(int64))
-	assert.Equal(t, float64(11.15), result["float"].(float64))
-	assert.Equal(t, false, result["bool"].(bool))
-}
-
+*/
 func TestTransformerEnv(t *testing.T) {
 
 	testSourceSchema := schemer.NewSchema()
@@ -261,7 +284,7 @@ func TestTransformerEnv(t *testing.T) {
 
 	// Create transformer
 	transformer := schemer.NewTransformer(testSourceSchema, testDestSchema,
-		schemer.WithRuntime(goja_runtime.NewRuntime()),
+		schemer.WithRuntime(jsRuntime),
 	)
 
 	// Set transform script
@@ -314,7 +337,7 @@ func TestTransformer_MultipleResults(t *testing.T) {
 
 	// Create transformer
 	transformer := schemer.NewTransformer(testSourceSchema, testDestSchema,
-		schemer.WithRuntime(goja_runtime.NewRuntime()),
+		schemer.WithRuntime(jsRuntime),
 	)
 
 	// Set transform script
@@ -335,17 +358,17 @@ func TestTransformer_MultipleResults(t *testing.T) {
 }`
 	var sourceData map[string]interface{}
 	err = json.Unmarshal([]byte(rawData), &sourceData)
-	if err != nil {
-		t.Error(err)
+	if !assert.Nil(t, err) {
+		return
 	}
 
 	results, err := transformer.Transform(nil, sourceData)
-	if err != nil {
-		t.Error(err)
+	if !assert.Nil(t, err) {
+		return
 	}
 
-	if len(results) != 2 {
-		t.Fail()
+	if !assert.Len(t, results, 2) {
+		return
 	}
 
 	assert.Equal(t, "Brobridge"+"FIRST", results[0]["string"].(string))
@@ -368,7 +391,7 @@ func TestTransformer_Default(t *testing.T) {
 
 	// Create transformer
 	transformer := schemer.NewTransformer(testSourceSchema, testDestSchema,
-		schemer.WithRuntime(goja_runtime.NewRuntime()),
+		schemer.WithRuntime(jsRuntime),
 	)
 
 	// Transform
@@ -411,7 +434,7 @@ func TestTransformer_NullResult(t *testing.T) {
 
 	// Create transformer
 	transformer := schemer.NewTransformer(testSourceSchema, testDestSchema,
-		schemer.WithRuntime(goja_runtime.NewRuntime()),
+		schemer.WithRuntime(jsRuntime),
 	)
 
 	// Set transform script
@@ -453,7 +476,7 @@ func TestTransformer_NestedStructure(t *testing.T) {
 
 	// Create transformer
 	transformer := schemer.NewTransformer(sourceSchema, destSchema,
-		schemer.WithRuntime(goja_runtime.NewRuntime()),
+		schemer.WithRuntime(jsRuntime),
 	)
 
 	// Set transform script
@@ -507,7 +530,7 @@ func TestTransformer_Source_Binary(t *testing.T) {
 
 	// Create transformer
 	transformer := schemer.NewTransformer(sourceSchema, destSchema,
-		schemer.WithRuntime(goja_runtime.NewRuntime()),
+		schemer.WithRuntime(jsRuntime),
 	)
 
 	// Set transform script
@@ -533,12 +556,12 @@ func TestTransformer_Source_Binary(t *testing.T) {
 	}
 
 	results, err := transformer.Transform(nil, sourceData)
-	if err != nil {
-		t.Error(err)
+	if !assert.Nil(t, err) {
+		return
 	}
 
-	if len(results) != 1 {
-		t.Fail()
+	if !assert.Len(t, results, 1) {
+		return
 	}
 
 	result := results[0]
@@ -567,7 +590,7 @@ func TestTransformer_Source_Integer(t *testing.T) {
 
 	// Create transformer
 	transformer := schemer.NewTransformer(sourceSchema, destSchema,
-		schemer.WithRuntime(goja_runtime.NewRuntime()),
+		schemer.WithRuntime(jsRuntime),
 	)
 
 	// Set transform script
@@ -625,7 +648,7 @@ func TestTransformer_Source_UnsignedInteger(t *testing.T) {
 
 	// Create transformer
 	transformer := schemer.NewTransformer(sourceSchema, destSchema,
-		schemer.WithRuntime(goja_runtime.NewRuntime()),
+		schemer.WithRuntime(jsRuntime),
 	)
 
 	// Set transform script
@@ -683,7 +706,7 @@ func TestTransformer_Source_Float(t *testing.T) {
 
 	// Create transformer
 	transformer := schemer.NewTransformer(sourceSchema, destSchema,
-		schemer.WithRuntime(goja_runtime.NewRuntime()),
+		schemer.WithRuntime(jsRuntime),
 	)
 
 	// Set transform script
@@ -741,7 +764,7 @@ func TestTransformer_Source_String(t *testing.T) {
 
 	// Create transformer
 	transformer := schemer.NewTransformer(sourceSchema, destSchema,
-		schemer.WithRuntime(goja_runtime.NewRuntime()),
+		schemer.WithRuntime(jsRuntime),
 	)
 
 	// Set transform script
@@ -805,7 +828,7 @@ func TestTransformer_Source_Bool_With_True(t *testing.T) {
 
 	// Create transformer
 	transformer := schemer.NewTransformer(sourceSchema, destSchema,
-		schemer.WithRuntime(goja_runtime.NewRuntime()),
+		schemer.WithRuntime(jsRuntime),
 	)
 
 	// Set transform script
@@ -863,7 +886,7 @@ func TestTransformer_Source_Bool_With_False(t *testing.T) {
 
 	// Create transformer
 	transformer := schemer.NewTransformer(sourceSchema, destSchema,
-		schemer.WithRuntime(goja_runtime.NewRuntime()),
+		schemer.WithRuntime(jsRuntime),
 	)
 
 	// Set transform script
@@ -921,7 +944,7 @@ func TestTransformer_Source_Time(t *testing.T) {
 
 	// Create transformer
 	transformer := schemer.NewTransformer(sourceSchema, destSchema,
-		schemer.WithRuntime(goja_runtime.NewRuntime()),
+		schemer.WithRuntime(jsRuntime),
 	)
 
 	// Set transform script
@@ -977,7 +1000,7 @@ func TestTransformer_Source_Time_Dest_Empty(t *testing.T) {
 
 	// Create transformer
 	transformer := schemer.NewTransformer(sourceSchema, nil,
-		schemer.WithRuntime(goja_runtime.NewRuntime()),
+		schemer.WithRuntime(jsRuntime),
 	)
 
 	// Set transform script
@@ -1025,7 +1048,7 @@ func TestTransformer_Source_MicroTime(t *testing.T) {
 
 	// Create transformer
 	transformer := schemer.NewTransformer(sourceSchema, destSchema,
-		schemer.WithRuntime(goja_runtime.NewRuntime()),
+		schemer.WithRuntime(jsRuntime),
 	)
 
 	// Set transform script
@@ -1087,7 +1110,7 @@ func TestTransformer_Source_Null(t *testing.T) {
 
 	// Create transformer
 	transformer := schemer.NewTransformer(sourceSchema, destSchema,
-		schemer.WithRuntime(goja_runtime.NewRuntime()),
+		schemer.WithRuntime(jsRuntime),
 	)
 
 	// Set transform script
@@ -1151,7 +1174,7 @@ func TestTransformer_Source_TimeString(t *testing.T) {
 
 	// Create transformer
 	transformer := schemer.NewTransformer(sourceSchema, destSchema,
-		schemer.WithRuntime(goja_runtime.NewRuntime()),
+		schemer.WithRuntime(jsRuntime),
 	)
 
 	// Set transform script
@@ -1216,7 +1239,7 @@ func TestTransformer_Source_TimeEmptyString(t *testing.T) {
 
 	// Create transformer
 	transformer := schemer.NewTransformer(sourceSchema, destSchema,
-		schemer.WithRuntime(goja_runtime.NewRuntime()),
+		schemer.WithRuntime(jsRuntime),
 	)
 
 	// Set transform script

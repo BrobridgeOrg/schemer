@@ -1,14 +1,11 @@
-package goja_runtime
+package v8go_runtime
 
 import (
 	"testing"
 
 	"github.com/BrobridgeOrg/schemer"
-	"github.com/dop251/goja"
-	jsoniter "github.com/json-iterator/go"
+	"rogchap.com/v8go"
 )
-
-var json = jsoniter.ConfigCompatibleWithStandardLibrary
 
 var testSchema = `{
 	"string": { "type": "string" },
@@ -33,25 +30,17 @@ var testSchema = `{
 
 func BenchmarkJavaScriptVM(b *testing.B) {
 
-	vm := goja.New()
+	iso := v8go.NewIsolate()
+	ctx := v8go.NewContext(iso)
 
-	p, _ := goja.Compile("transformer", "function main() {}", false)
-	vm.RunProgram(p)
+	ctx.RunScript("function main() {}", "main.js")
+	fn, _ := ctx.Global().Get("main")
+	main, _ := fn.AsFunction()
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 
-		main, ok := goja.AssertFunction(vm.Get("main"))
-		if !ok {
-			panic("main is not a function")
-		}
-
-		res, err := main(goja.Undefined())
-		if err != nil {
-			panic(err)
-		}
-
-		res.Export()
+		main.Call(ctx.Global(), v8go.Undefined(iso))
 	}
 }
 

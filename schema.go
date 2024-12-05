@@ -126,7 +126,7 @@ func (s *Schema) normalize(schema *Schema, data map[string]interface{}) map[stri
 	for fieldName, def := range schema.Fields {
 
 		// Skip internal fields
-		if strings.HasPrefix(fieldName, "$") {
+		if fieldName[0] == '$' {
 			continue
 		}
 
@@ -158,7 +158,7 @@ func (s *Schema) normalize(schema *Schema, data map[string]interface{}) map[stri
 	for key, val := range data {
 
 		// Keep internal fields
-		if strings.HasPrefix(key, "$") {
+		if key[0] == '$' {
 			result[key] = val
 			continue
 		}
