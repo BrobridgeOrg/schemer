@@ -198,7 +198,7 @@ func UnmarshalJSON(source []byte, s *Schema) error {
 
 	// Parsing original JSON string
 	var raw map[string]interface{}
-	err := json.Unmarshal([]byte(source), &raw)
+	err := json.Unmarshal(source, &raw)
 	if err != nil {
 		return err
 	}
