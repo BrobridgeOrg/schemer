@@ -282,6 +282,21 @@ func getArrayValue(def *Definition, data interface{}) (interface{}, error) {
 		return nil, nil
 	}
 
+	// prevent to use reflection if possible
+	switch d := data.(type) {
+	case []interface{}:
+		value := make([]interface{}, len(d))
+		for i, v := range d {
+			val, err := getValue(def.Subtype, v)
+			if err != nil {
+				return nil, ErrInvalidType
+			}
+
+			value[i] = val
+		}
+		return value, nil
+	}
+
 	// Not an array
 	v := reflect.ValueOf(data)
 	if v.Kind() != reflect.Array && v.Kind() != reflect.Slice {
