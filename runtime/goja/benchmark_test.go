@@ -140,12 +140,6 @@ func BenchmarkTransformer_PassThrough(b *testing.B) {
 		schemer.WithRuntime(r),
 	)
 
-	// Set transform script
-	err = transformer.SetScript(`return source`)
-	if err != nil {
-		b.Fatal(err)
-	}
-
 	// Transform
 	rawData := `{
 	"string": "Brobridge",

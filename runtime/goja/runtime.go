@@ -8,13 +8,15 @@ import (
 )
 
 type Runtime struct {
-	vm *goja.Runtime
+	vm   *goja.Runtime
+	main goja.Callable
 }
 
 func NewRuntime() *Runtime {
 
 	r := &Runtime{
-		vm: goja.New(),
+		vm:   goja.New(),
+		main: nil,
 	}
 
 	r.initBuiltInFunctions()
@@ -62,28 +64,32 @@ func (r *Runtime) Execute(sourceSchema *schemer.Schema, data map[string]interfac
 		r.normalize(sourceSchema, data)
 	}
 
-	// Get main function from VM
-	main, ok := goja.AssertFunction(r.vm.Get("main"))
-	if !ok {
-		return nil, fmt.Errorf("main is not a function")
+	if r.main == nil {
+		// Get main function from VM
+		main, ok := goja.AssertFunction(r.vm.Get("main"))
+		if !ok {
+			return nil, fmt.Errorf("main is not a function")
+		}
+
+		r.main = main
 	}
+
 	/*
 		// Preparing $ref
 		ref := t.internalImpl.PrepareRefs(data)
 		data["$ref"] = ref
 	*/
 	// Execute
-	res, err := main(goja.Undefined(), r.vm.ToValue(data))
+	res, err := r.main(goja.Undefined(), r.vm.ToValue(data))
 	if err != nil {
 		return nil, err
 	}
 
-	var result interface{}
 	if goja.IsNull(res) || goja.IsUndefined(res) || goja.IsNaN(res) || goja.IsInfinity(res) {
 		return nil, nil
 	}
 
-	result = res.Export()
+	var result interface{} = res.Export()
 
 	// returned data is an array
 	switch d := result.(type) {
