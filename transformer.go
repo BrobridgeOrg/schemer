@@ -2,6 +2,7 @@ package schemer
 
 import (
 	_ "embed"
+	"strings"
 )
 
 //go:embed js/dummy.js
@@ -124,6 +125,13 @@ func (t *Transformer) prepareScript(script string) string {
 }
 
 func (t *Transformer) SetScript(script string) error {
+
+	// Pass through if no script is set
+	SCRIPT := strings.Trim(script, " ")
+	if SCRIPT == "return source" || SCRIPT == "return source;" {
+		t.passThrough = true
+		return nil
+	}
 
 	fullScript := t.prepareScript(script)
 
