@@ -115,3 +115,56 @@ func BenchmarkTransformer(b *testing.B) {
 		}
 	}
 }
+
+func BenchmarkTransformer_PassThrough(b *testing.B) {
+
+	testSourceSchema := schemer.NewSchema()
+	err := schemer.UnmarshalJSON([]byte(testSchema), testSourceSchema)
+	if err != nil {
+		b.Fatal(err)
+	}
+
+	testDestSchema := schemer.NewSchema()
+	err = schemer.UnmarshalJSON([]byte(testSchema), testDestSchema)
+	if err != nil {
+		b.Fatal(err)
+	}
+
+	// Create Runtime
+	r := NewRuntime()
+
+	// Create transformer
+	transformer := schemer.NewTransformer(
+		testSourceSchema,
+		testDestSchema,
+		schemer.WithRuntime(r),
+	)
+
+	// Set transform script
+	err = transformer.SetScript(`return source`)
+	if err != nil {
+		b.Fatal(err)
+	}
+
+	// Transform
+	rawData := `{
+	"string": "Brobridge",
+	"int": -9527,
+	"uint": 9527,
+	"float": 11.15,
+	"bool": false
+}`
+	var sourceData map[string]interface{}
+	err = json.Unmarshal([]byte(rawData), &sourceData)
+	if err != nil {
+		b.Fatal(err)
+	}
+
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		_, err := transformer.Transform(nil, sourceData)
+		if err != nil {
+			b.Fatal(err)
+		}
+	}
+}

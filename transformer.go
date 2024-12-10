@@ -19,17 +19,19 @@ func WithRuntime(runtime Runtime) func(*Transformer) {
 }
 
 type Transformer struct {
-	source  *Schema
-	dest    *Schema
-	runtime Runtime
+	source      *Schema
+	dest        *Schema
+	runtime     Runtime
+	passThrough bool
 }
 
 func NewTransformer(source *Schema, dest *Schema, opts ...TransformerOpt) *Transformer {
 
 	t := &Transformer{
-		source:  source,
-		dest:    dest,
-		runtime: nil,
+		source:      source,
+		dest:        dest,
+		runtime:     nil,
+		passThrough: true,
 	}
 
 	for _, opt := range opts {
@@ -39,12 +41,6 @@ func NewTransformer(source *Schema, dest *Schema, opts ...TransformerOpt) *Trans
 	// Preload scripts
 	t.runtime.LoadScript(dummyJS)
 	t.runtime.LoadScript(coreJS)
-
-	// Default script
-	err := t.SetScript(`return source`)
-	if err != nil {
-		panic(err)
-	}
 
 	return t
 }
@@ -88,7 +84,20 @@ func (t *Transformer) runScript(data map[string]interface{}) ([]map[string]inter
 	return results, err
 }
 
+func (t *Transformer) Reset() {
+	t.passThrough = true
+}
+
 func (t *Transformer) Transform(env map[string]interface{}, input map[string]interface{}) ([]map[string]interface{}, error) {
+	// Pass through if no script is set
+	if t.passThrough {
+		data, err := t.normalizeValue(input)
+		if err != nil {
+			return nil, err
+		}
+
+		return []map[string]interface{}{data}, nil
+	}
 
 	var data map[string]interface{} = input
 	if t.source != nil {
@@ -122,6 +131,8 @@ func (t *Transformer) SetScript(script string) error {
 	if err != nil {
 		return err
 	}
+
+	t.passThrough = false
 
 	return nil
 }
