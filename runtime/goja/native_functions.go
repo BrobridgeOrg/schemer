@@ -2,7 +2,6 @@ package goja_runtime
 
 import (
 	"reflect"
-	"strconv"
 	"strings"
 
 	"github.com/dop251/goja"
@@ -32,20 +31,24 @@ func (r *Runtime) nativePrepareRefs(source map[string]interface{}) map[string]in
 		keyParts := strings.Split(sourceKey, ".")
 		level := result
 
-		for i := 0; i < len(keyParts); i++ {
-			part := keyParts[i]
+		for i, part := range keyParts {
 
 			// If we are at the last part, assign the value
 			if i == len(keyParts)-1 {
 				level[part] = value
 			} else {
+
+				v, ok := level[part]
+
 				// If the part does not exist, create a new map
-				if _, ok := level[part]; !ok {
-					level[part] = make(map[string]interface{})
+				//if _, ok := level[part]; !ok {
+				if !ok {
+					v = make(map[string]interface{})
+					level[part] = v
 				}
 
 				// Move deeper into the nested map
-				nextLevel, _ := level[part].(map[string]interface{})
+				nextLevel, _ := v.(map[string]interface{})
 				level = nextLevel
 			}
 		}
@@ -67,25 +70,23 @@ func (r *Runtime) nativeScanStruct(vm *goja.Runtime, obj *goja.Object) {
 		} else if goja.IsNull(value) {
 			// Continue if the value is null
 			continue
+		} else if value.ExportType().Kind() == reflect.Map {
+			// If the value is an object, recursively call scanStruct
+			r.nativeScanStruct(vm, value.ToObject(vm))
 		} else if value.ExportType().Kind() == reflect.Slice {
 			// If the value is an array, iterate over the elements and recursively call scanStruct
 			arrayObj := value.ToObject(vm)
-			length := int(arrayObj.Get("length").ToInteger())
-			for i := 0; i < length; i++ {
-
-				key := strconv.Itoa(i)
-				elem := arrayObj.Get(key)
+			arrKey := arrayObj.Keys()
+			for _, k := range arrKey {
+				elem := arrayObj.Get(k)
 
 				if goja.IsUndefined(elem) || goja.IsNaN(elem) || goja.IsInfinity(elem) || goja.IsNull(elem) {
 					// Set undefined elements to null or delete them as per requirement
-					arrayObj.Set(key, nil)
+					arrayObj.Set(k, nil)
 				} else {
 					r.nativeScanStruct(vm, elem.ToObject(vm))
 				}
 			}
-		} else if value.ExportType().Kind() == reflect.Map {
-			// If the value is an object, recursively call scanStruct
-			r.nativeScanStruct(vm, value.ToObject(vm))
 		}
 	}
 }

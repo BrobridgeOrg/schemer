@@ -186,6 +186,15 @@ const proxyHandler = {
   }
 };
 
+const proxySettings = {
+  property: '$ref',
+  configurations: {
+    enumerable: false,
+    writable: false,
+    configurable: true
+  }
+};
+
 function execute(source, script) {
 
   let data = Object.assign({}, source)
@@ -193,11 +202,7 @@ function execute(source, script) {
   let proxy = new Proxy(data, proxyHandler);
 
   // Hide properties
-  Object.defineProperty(proxy, '$ref', {
-    enumerable: false,
-    writable: false,
-    configurable: true
-  });
+  Object.defineProperty(proxy, proxySettings.property, proxySettings.configurations);
 
   let result = script(proxy);
   if (!result) {
