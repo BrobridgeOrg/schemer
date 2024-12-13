@@ -15,37 +15,15 @@ var (
 
 func getStandardValue(data interface{}) interface{} {
 
-	switch d := data.(type) {
+	v := reflect.ValueOf(data)
 
-	// Integer
-	case int:
-		return int64(d)
-	case int8:
-		return int64(d)
-	case int16:
-		return int64(d)
-	case int32:
-		return int64(d)
-	case int64:
-		return d
-	case uint:
-		return uint64(d)
-	case uint8:
-		return uint64(d)
-
-	// Unsigned integer
-	case uint16:
-		return uint64(d)
-	case uint32:
-		return uint64(d)
-	case uint64:
-		return d
-
-	// Float
-	case float32:
-		return float64(d)
-	case float64:
-		return d
+	switch v.Kind() {
+	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
+		return v.Int()
+	case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
+		return v.Uint()
+	case reflect.Float32, reflect.Float64:
+		return v.Float()
 	}
 
 	return data

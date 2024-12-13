@@ -121,7 +121,7 @@ func (s *Schema) getDefinition(parts []string) *Definition {
 
 func (s *Schema) normalize(schema *Schema, data map[string]interface{}) map[string]interface{} {
 
-	result := make(map[string]interface{})
+	result := make(map[string]interface{}, len(data))
 
 	for fieldName, def := range schema.Fields {
 
