@@ -15,28 +15,60 @@ func NewSchema() *Schema {
 }
 
 func (s *Schema) parsePath(fullPath string) []string {
-
+	var elements []string
+	var currentElement []rune
 	quoted := false
-	elements := strings.FieldsFunc(fullPath, func(r rune) bool {
 
-		if r == '"' {
+	for _, r := range fullPath {
+		switch r {
+		case '"':
 			quoted = !quoted
-
-			// Ignore
-			return true
+		case '.':
+			if quoted {
+				currentElement = append(currentElement, r)
+			} else {
+				if len(currentElement) > 0 {
+					elements = append(elements, string(currentElement))
+					currentElement = currentElement[:0]
+				}
+			}
+		default:
+			currentElement = append(currentElement, r)
 		}
-
-		return !quoted && r == '.'
-	})
-
-	parts := make([]string, len(elements))
-	for i, element := range elements {
-		parts[i] = element
 	}
 
-	return parts
+	// Append the last element if any
+	if len(currentElement) > 0 {
+		elements = append(elements, string(currentElement))
+	}
+
+	return elements
 }
 
+/*
+func (s *Schema) parsePath(fullPath string) []string {
+
+		quoted := false
+		elements := strings.FieldsFunc(fullPath, func(r rune) bool {
+
+			if r == '"' {
+				quoted = !quoted
+
+				// Ignore
+				return true
+			}
+
+			return !quoted && r == '.'
+		})
+
+		parts := make([]string, len(elements))
+		for i, element := range elements {
+			parts[i] = element
+		}
+
+		return parts
+	}
+*/
 func (s *Schema) GetDefinition(valuePath string) *Definition {
 	parts := s.parsePath(valuePath)
 	return s.getDefinition(parts)
@@ -89,12 +121,12 @@ func (s *Schema) getDefinition(parts []string) *Definition {
 
 func (s *Schema) normalize(schema *Schema, data map[string]interface{}) map[string]interface{} {
 
-	result := make(map[string]interface{})
+	result := make(map[string]interface{}, len(data))
 
 	for fieldName, def := range schema.Fields {
 
 		// Skip internal fields
-		if strings.HasPrefix(fieldName, "$") {
+		if fieldName[0] == '$' {
 			continue
 		}
 
@@ -126,7 +158,7 @@ func (s *Schema) normalize(schema *Schema, data map[string]interface{}) map[stri
 	for key, val := range data {
 
 		// Keep internal fields
-		if strings.HasPrefix(key, "$") {
+		if key[0] == '$' {
 			result[key] = val
 			continue
 		}
@@ -166,7 +198,7 @@ func UnmarshalJSON(source []byte, s *Schema) error {
 
 	// Parsing original JSON string
 	var raw map[string]interface{}
-	err := json.Unmarshal([]byte(source), &raw)
+	err := json.Unmarshal(source, &raw)
 	if err != nil {
 		return err
 	}

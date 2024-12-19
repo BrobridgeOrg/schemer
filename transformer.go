@@ -2,12 +2,7 @@ package schemer
 
 import (
 	_ "embed"
-	"fmt"
-	"reflect"
-	"time"
-
-	"github.com/BrobridgeOrg/schemer/types"
-	"github.com/dop251/goja"
+	"strings"
 )
 
 //go:embed js/dummy.js
@@ -16,169 +11,39 @@ var dummyJS string
 //go:embed js/core.js
 var coreJS string
 
-type Transformer struct {
-	source        *Schema
-	dest          *Schema
-	script        string
-	program       *goja.Program
-	ctx           *Context
-	relationships map[string][]string
-	internalImpl  *TransformerScriptImpl
+type TransformerOpt func(*Transformer)
+
+func WithRuntime(runtime Runtime) func(*Transformer) {
+	return func(t *Transformer) {
+		t.runtime = runtime
+	}
 }
 
-func NewTransformer(source *Schema, dest *Schema) *Transformer {
+type Transformer struct {
+	source      *Schema
+	dest        *Schema
+	runtime     Runtime
+	passThrough bool
+}
+
+func NewTransformer(source *Schema, dest *Schema, opts ...TransformerOpt) *Transformer {
 
 	t := &Transformer{
-		source:        source,
-		dest:          dest,
-		relationships: make(map[string][]string),
-		internalImpl:  NewTransformerScript(),
+		source:      source,
+		dest:        dest,
+		runtime:     nil,
+		passThrough: true,
 	}
 
-	// Preparing context
-	ctx, err := t.createContext()
-	if err != nil {
-		panic(err)
+	for _, opt := range opts {
+		opt(t)
 	}
 
-	t.ctx = ctx
-
-	t.injectFuncs()
-
-	err = t.SetScript(`return source`)
-	if err != nil {
-		panic(err)
-	}
+	// Preload scripts
+	t.runtime.LoadScript(dummyJS)
+	t.runtime.LoadScript(coreJS)
 
 	return t
-}
-
-func (t *Transformer) createContext() (*Context, error) {
-
-	ctx := NewContext()
-
-	err := ctx.LoadScript(dummyJS)
-	if err != nil {
-		return nil, err
-	}
-
-	err = ctx.LoadScript(coreJS)
-	if err != nil {
-		return nil, err
-	}
-
-	return ctx, nil
-}
-
-func (t *Transformer) normalize(ctx *Context, schema *Schema, data map[string]interface{}) {
-
-	for fieldName, def := range schema.Fields {
-
-		val, ok := data[fieldName]
-		if !ok {
-			continue
-		}
-
-		if def.Type == TYPE_MAP {
-			t.normalize(ctx, def.Schema, val.(map[string]interface{}))
-			continue
-		}
-
-		if def.Type == TYPE_TIME {
-
-			// Skip null
-			if val == nil {
-				continue
-			}
-
-			if def.Info.(*types.Time).Precision != types.TIME_PRECISION_MICROSECOND {
-				v, _ := ctx.vm.New(ctx.vm.Get("Date").ToObject(ctx.vm), ctx.vm.ToValue(val.(time.Time).UnixMicro()/1e3))
-				data[fieldName] = v
-			}
-			continue
-		}
-	}
-}
-
-func (t *Transformer) initializeContext(ctx *Context, env map[string]interface{}, schema *Schema, data map[string]interface{}) error {
-
-	if !ctx.IsReady() {
-		return fmt.Errorf("Context is not ready")
-	}
-
-	// Initializing environment varable
-	ctx.vm.Set("env", env)
-
-	// Normorlize data for JavaScript
-	if t.source != nil {
-		t.normalize(ctx, t.source, data)
-	}
-
-	//	ctx.vm.Set("source", data)
-
-	return nil
-}
-
-func (t *Transformer) handleArrayValue(arrayValue []interface{}) error {
-
-	for i, value := range arrayValue {
-		v := reflect.ValueOf(value)
-		switch v.Kind() {
-		/*
-			case reflect.Slice:
-				err := t.handleArrayValue(value.([]interface{}))
-				if err != nil {
-					return err
-				}
-		*/
-		case reflect.Map:
-			err := t.handleMapValue(value.(map[string]interface{}))
-			if err != nil {
-				return err
-			}
-		default:
-			// Convert Data object to time.Time
-			switch d := value.(type) {
-			case *goja.Object:
-				if value.(*goja.Object).ClassName() == "Date" {
-					arrayValue[i] = d.Export()
-				}
-			}
-		}
-	}
-
-	return nil
-}
-
-func (t *Transformer) handleMapValue(returnedValue map[string]interface{}) error {
-
-	for key, value := range returnedValue {
-		v := reflect.ValueOf(value)
-		switch v.Kind() {
-		/*
-			case reflect.Slice:
-				err := t.handleArrayValue(value.([]interface{}))
-				if err != nil {
-					return err
-				}
-		*/
-		case reflect.Map:
-			err := t.handleMapValue(value.(map[string]interface{}))
-			if err != nil {
-				return err
-			}
-		default:
-			// Convert Data object to time.Time
-			switch d := value.(type) {
-			case *goja.Object:
-				if value.(*goja.Object).ClassName() == "Date" {
-					returnedValue[key] = d.Export()
-				}
-			}
-		}
-	}
-
-	return nil
 }
 
 func (t *Transformer) normalizeValue(v map[string]interface{}) (map[string]interface{}, error) {
@@ -199,116 +64,51 @@ func (t *Transformer) normalizeValue(v map[string]interface{}) (map[string]inter
 	return val, nil
 }
 
-func (t *Transformer) injectFuncs() error {
+func (t *Transformer) runScript(data map[string]interface{}) ([]map[string]interface{}, error) {
 
-	err := t.internalImpl.injectFuncs(t.ctx.vm)
+	results, err := t.runtime.Execute(t.source, data)
 	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func (t *Transformer) runScript(ctx *Context, data map[string]interface{}) ([]map[string]interface{}, error) {
-
-	main, ok := goja.AssertFunction(ctx.vm.Get("main"))
-	if !ok {
-		return nil, fmt.Errorf("main is not a function")
-	}
-
-	// Preparing $ref
-	ref := t.internalImpl.PrepareRefs(data)
-	data["$ref"] = ref
-
-	// Execute
-	source := ctx.vm.ToValue(data)
-	res, err := main(goja.Undefined(), source)
-	if err != nil {
-		fmt.Println(err)
 		return nil, err
 	}
-	/*
-		var fn func() interface{}
-		err := ctx.vm.ExportTo(ctx.vm.Get("main"), &fn)
-		if err != nil {
-			return nil, err
-		}
 
-		result := fn()
-	*/
-
-	var result interface{}
-	if goja.IsNull(res) || goja.IsUndefined(res) || goja.IsNaN(res) || goja.IsInfinity(res) {
-		return nil, nil
-	}
-
-	result = res.Export()
-
-	v := reflect.ValueOf(result)
-	switch v.Kind() {
-	case reflect.Slice:
-
-		v := result.([]interface{})
-
-		// Prepare array
-		returnedValues := make([]map[string]interface{}, len(v))
-
-		for i, d := range v {
-			v := d.(map[string]interface{})
-
-			// Deal with JavaScript Object
-			err := t.handleMapValue(v)
-			if err != nil {
-				return nil, err
-			}
-
-			// Normalize returned data based on schema
-			val, err := t.normalizeValue(v)
-			if err != nil {
-				return nil, err
-			}
-
-			returnedValues[i] = val
-		}
-
-		return returnedValues, nil
-
-	default:
-
-		v := result.(map[string]interface{})
-
-		// Deal with JavaScript Object
-		err := t.handleMapValue(v)
-		if err != nil {
-			return nil, err
-		}
+	for i, result := range results {
 
 		// Normalize returned data based on schema
-		val, err := t.normalizeValue(v)
+		val, err := t.normalizeValue(result)
 		if err != nil {
 			return nil, err
 		}
 
-		return []map[string]interface{}{
-			val,
-		}, nil
+		results[i] = val
 	}
+
+	return results, err
+}
+
+func (t *Transformer) Reset() {
+	t.passThrough = true
 }
 
 func (t *Transformer) Transform(env map[string]interface{}, input map[string]interface{}) ([]map[string]interface{}, error) {
+	// Pass through if no script is set
+	if t.passThrough {
+		data, err := t.normalizeValue(input)
+		if err != nil {
+			return nil, err
+		}
+
+		return []map[string]interface{}{data}, nil
+	}
 
 	var data map[string]interface{} = input
 	if t.source != nil {
 		data = t.source.Normalize(input)
 	}
 
-	err := t.initializeContext(t.ctx, env, t.source, data)
-	if err != nil {
-		return nil, err
-	}
+	t.runtime.SetEnv(env)
 
 	// Run script to process data
-	result, err := t.runScript(t.ctx, data)
+	result, err := t.runScript(data)
 	if err != nil {
 		return nil, err
 	}
@@ -326,19 +126,21 @@ func (t *Transformer) prepareScript(script string) string {
 
 func (t *Transformer) SetScript(script string) error {
 
-	t.script = t.prepareScript(script)
+	// Pass through if no script is set
+	SCRIPT := strings.Trim(script, " ")
+	if SCRIPT == "return source" || SCRIPT == "return source;" {
+		t.passThrough = true
+		return nil
+	}
 
-	p, err := goja.Compile("transformer", t.script, false)
+	fullScript := t.prepareScript(script)
+
+	err := t.runtime.Compile(fullScript)
 	if err != nil {
 		return err
 	}
 
-	t.program = p
-
-	err = t.ctx.PreloadScript(t.program)
-	if err != nil {
-		panic(err)
-	}
+	t.passThrough = false
 
 	return nil
 }
