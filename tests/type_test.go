@@ -1,4 +1,4 @@
-package tests
+package schemer_test
 
 import (
 	"regexp"

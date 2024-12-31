@@ -1,4 +1,4 @@
-package tests
+package schemer_test
 
 import (
 	"encoding/json"
@@ -247,7 +247,7 @@ func TestMapSuccessTransform2(t *testing.T) {
 	}
 
 	// Create transformer
-	transformer := schemer.NewTransformer(testSourceSchema, testDestSchema)
+	transformer := schemer.NewTransformer(testSourceSchema, testDestSchema, schemer.WithRuntime(jsRuntime))
 	err = transformer.SetScript(`return source`)
 	if err != nil {
 		t.Error(err)
@@ -278,7 +278,7 @@ func TestMapTransformErrorHandle2(t *testing.T) {
 	}
 
 	// Create transformer
-	transformer := schemer.NewTransformer(testSourceSchema, testDestSchema)
+	transformer := schemer.NewTransformer(testSourceSchema, testDestSchema, schemer.WithRuntime(jsRuntime))
 	err = transformer.SetScript(`return source`)
 	if err != nil {
 		t.Error(err)
@@ -305,7 +305,7 @@ func TestMapSuccessTransform3(t *testing.T) {
 	}
 
 	// Create transformer
-	transformer := schemer.NewTransformer(testSourceSchema, testDestSchema)
+	transformer := schemer.NewTransformer(testSourceSchema, testDestSchema, schemer.WithRuntime(jsRuntime))
 	err = transformer.SetScript(`return source`)
 	if err != nil {
 		t.Error(err)
@@ -376,7 +376,7 @@ func TestMapTransformErrorHandle3(t *testing.T) {
 	}
 
 	// Create transformer
-	transformer := schemer.NewTransformer(testSourceSchema, testDestSchema)
+	transformer := schemer.NewTransformer(testSourceSchema, testDestSchema, schemer.WithRuntime(jsRuntime))
 	err = transformer.SetScript(`return source`)
 	if err != nil {
 		t.Error(err)

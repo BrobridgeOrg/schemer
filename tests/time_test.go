@@ -1,4 +1,4 @@
-package tests
+package schemer_test
 
 import (
 	"encoding/json"
@@ -125,7 +125,7 @@ func SetupTimeTransformer(t *testing.T, schema string) (*schemer.Transformer, *s
 	}
 
 	// Create transformer
-	transformer := schemer.NewTransformer(testSourceSchema, testDestSchema)
+	transformer := schemer.NewTransformer(testSourceSchema, testDestSchema, schemer.WithRuntime(jsRuntime))
 	err = transformer.SetScript(`return source`)
 	if err != nil {
 		t.Error(err)

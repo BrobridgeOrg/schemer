@@ -1,4 +1,4 @@
-package tests
+package schemer_test
 
 import (
 	"encoding/json"
@@ -151,7 +151,7 @@ func TestNormalSchema(t *testing.T) {
 		t.Error(err)
 	}
 
-	transformer := schemer.NewTransformer(testSourceSchema, testDestSchema)
+	transformer := schemer.NewTransformer(testSourceSchema, testDestSchema, schemer.WithRuntime(jsRuntime))
 	err = transformer.SetScript(`return source`)
 	if err != nil {
 		t.Error(err)
@@ -220,7 +220,7 @@ func TestNormalSchemaErrorHandle(t *testing.T) {
 		t.Error(err)
 	}
 
-	transformer := schemer.NewTransformer(testSourceSchema, testDestSchema)
+	transformer := schemer.NewTransformer(testSourceSchema, testDestSchema, schemer.WithRuntime(jsRuntime))
 	err = transformer.SetScript(`return source`)
 	if err != nil {
 		t.Error(err)

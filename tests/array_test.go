@@ -1,4 +1,4 @@
-package tests
+package schemer_test
 
 import (
 	"encoding/json"
@@ -202,7 +202,7 @@ func TestLongStringArray(t *testing.T) {
 
 	source := testSourceSchema.Normalize(rawData)
 	result := AssertTransform(t, transformer, source)
-	
+
 	assert.ElementsMatch(t, []string{longString, longString, longString}, result["array_string"])
 	assert.ElementsMatch(t, []string{longString, longString, longString}, result["array_any"])
 }
@@ -479,7 +479,7 @@ func SetupTransformer(t *testing.T, schema string) (*schemer.Transformer, *schem
 	}
 
 	// Create transformer
-	transformer := schemer.NewTransformer(testSourceSchema, testDestSchema)
+	transformer := schemer.NewTransformer(testSourceSchema, testDestSchema, schemer.WithRuntime(jsRuntime))
 	err = transformer.SetScript(`return source`)
 	if err != nil {
 		t.Error(err)
