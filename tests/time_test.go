@@ -27,10 +27,6 @@ var testTimeSource = `{
 		"type": "time",
 		"precision": "microsecond"
 	},
-  	"time_nanosecond": {
-		"type": "time",
-		"precision": "nanosecond"
-	},
 	"time_notSupport": {
 		"type": "time",
 		"precision": "notSupport"
@@ -50,7 +46,6 @@ type timeInput struct {
 	time_second      string
 	time_millisecond string
 	time_microsecond string
-	time_nanosecond  string
 	time_notSupport  string
 	time_us          string
 	time_MICROSecond string
@@ -61,7 +56,6 @@ type timeExpected struct {
 	time_second      time.Time
 	time_millisecond time.Time
 	time_microsecond time.Time
-	time_nanosecond  time.Time
 	time_notSupport  time.Time
 	time_us          time.Time
 	time_MICROSecond time.Time
@@ -82,11 +76,10 @@ func TimeTransform(t *testing.T, testSourceSchema *schemer.Schema, transformer *
 		"time_second": "%s",
 		"time_millisecond": "%s",
 		"time_microsecond": "%s",
-		"time_nanosecond": "%s",
 		"time_notSupport": "%s",
 		"time_us": "%s",
 		"time_MICROSecond": "%s"
-	}`, input.time_default, input.time_second, input.time_millisecond, input.time_microsecond, input.time_nanosecond, input.time_notSupport, input.time_us, input.time_MICROSecond)
+	}`, input.time_default, input.time_second, input.time_millisecond, input.time_microsecond, input.time_notSupport, input.time_us, input.time_MICROSecond)
 	var rawData map[string]interface{}
 	err := json.Unmarshal([]byte(jsonInput), &rawData)
 	if err != nil {
@@ -204,28 +197,6 @@ func TestTimePrecision(t *testing.T) {
 	result = TimeTransform(t, testTimeSourceSchema, transformer, timetest15)
 	assert.Equal(t, timetest15Expected.time_microsecond, result["time_microsecond"].(time.Time).UTC())
 
-	// nanosecond
-	timetest16 := timeInput{time_nanosecond: "2024-08-06T15:02:00Z"}
-	timetest16Expected := timeExpected{time_nanosecond: time.Date(2024, 8, 6, 15, 2, 0, 0, time.UTC)}
-	result = TimeTransform(t, testTimeSourceSchema, transformer, timetest16)
-	assert.Equal(t, timetest16Expected.time_nanosecond, result["time_nanosecond"].(time.Time).UTC())
-	timetest17 := timeInput{time_nanosecond: "2024-08-06T15:02:00.123Z"}
-	timetest17Expected := timeExpected{time_nanosecond: time.Date(2024, 8, 6, 15, 2, 0, 123000000, time.UTC)}
-	result = TimeTransform(t, testTimeSourceSchema, transformer, timetest17)
-	assert.Equal(t, timetest17Expected.time_nanosecond, result["time_nanosecond"].(time.Time).UTC())
-	timetest18 := timeInput{time_nanosecond: "2024-08-06T15:02:00.123456Z"}
-	timetest18Expected := timeExpected{time_nanosecond: time.Date(2024, 8, 6, 15, 2, 0, 123456000, time.UTC)}
-	result = TimeTransform(t, testTimeSourceSchema, transformer, timetest18)
-	assert.Equal(t, timetest18Expected.time_nanosecond, result["time_nanosecond"].(time.Time).UTC())
-	timetest19 := timeInput{time_nanosecond: "2024-08-06T15:02:00.123456789Z"}
-	timetest19Expected := timeExpected{time_nanosecond: time.Date(2024, 8, 6, 15, 2, 0, 123456789, time.UTC)}
-	result = TimeTransform(t, testTimeSourceSchema, transformer, timetest19)
-	assert.Equal(t, timetest19Expected.time_nanosecond, result["time_nanosecond"].(time.Time).UTC())
-	timetest20 := timeInput{time_nanosecond: "2024-08-06T15:02:00.1234567890Z"}
-	timetest20Expected := timeExpected{time_nanosecond: time.Date(2024, 8, 6, 15, 2, 0, 123456789, time.UTC)}
-	result = TimeTransform(t, testTimeSourceSchema, transformer, timetest20)
-	assert.Equal(t, timetest20Expected.time_nanosecond, result["time_nanosecond"].(time.Time).UTC())
-
 	// default precision
 	timetest21 := timeInput{time_default: "2024-08-06T15:02:00Z"}
 	timetest21Expected := timeExpected{time_default: time.Date(2024, 8, 6, 15, 2, 0, 0, time.UTC)}
@@ -323,12 +294,11 @@ func TestTimeNotSupportPrecision(t *testing.T) {
 func TestTimeTransformerWithMySQLFormat(t *testing.T) {
 
 	transformer, testTimeSourceSchema := SetupTimeTransformer(t, testTimeSource)
-	timetest1 := timeInput{time_second: "2024-08-06 15:02:00", time_millisecond: "2024-08-06 15:02:00", time_microsecond: "2024-08-06 15:02:00", time_nanosecond: "2024-08-06 15:02:00", time_default: "2024-08-06 15:02:00", time_notSupport: "2024-08-06 15:02:00"}
+	timetest1 := timeInput{time_second: "2024-08-06 15:02:00", time_millisecond: "2024-08-06 15:02:00", time_microsecond: "2024-08-06 15:02:00", time_default: "2024-08-06 15:02:00", time_notSupport: "2024-08-06 15:02:00"}
 	timetest1Expected := timeExpected{
 		time_second:      time.Date(2024, 8, 6, 15, 2, 0, 0, time.UTC),
 		time_millisecond: time.Date(2024, 8, 6, 15, 2, 0, 0, time.UTC),
 		time_microsecond: time.Date(2024, 8, 6, 15, 2, 0, 0, time.UTC),
-		time_nanosecond:  time.Date(2024, 8, 6, 15, 2, 0, 0, time.UTC),
 		time_default:     time.Date(2024, 8, 6, 15, 2, 0, 0, time.UTC),
 		time_notSupport:  time.Date(2024, 8, 6, 15, 2, 0, 0, time.UTC),
 	}
@@ -337,7 +307,6 @@ func TestTimeTransformerWithMySQLFormat(t *testing.T) {
 	assert.Equal(t, timetest1Expected.time_second, result["time_second"].(time.Time).UTC())
 	assert.Equal(t, timetest1Expected.time_millisecond, result["time_millisecond"].(time.Time).UTC())
 	assert.Equal(t, timetest1Expected.time_microsecond, result["time_microsecond"].(time.Time).UTC())
-	assert.Equal(t, timetest1Expected.time_nanosecond, result["time_nanosecond"].(time.Time).UTC())
 	assert.Equal(t, timetest1Expected.time_default, result["time_default"].(time.Time).UTC())
 	assert.Equal(t, timetest1Expected.time_notSupport, result["time_notSupport"].(time.Time).UTC())
 }
@@ -345,12 +314,11 @@ func TestTimeTransformerWithMySQLFormat(t *testing.T) {
 func TestTimeTransformerWithTimeZone(t *testing.T) {
 
 	transformer, testTimeSourceSchema := SetupTimeTransformer(t, testTimeSource)
-	timetest1 := timeInput{time_second: "2024-08-06T15:02:00+08:00", time_millisecond: "2024-08-06T15:02:00+08:00", time_microsecond: "2024-08-06T15:02:00+08:00", time_nanosecond: "2024-08-06T15:02:00+08:00", time_default: "2024-08-06T15:02:00+08:00", time_notSupport: "2024-08-06T15:02:00+08:00"}
+	timetest1 := timeInput{time_second: "2024-08-06T15:02:00+08:00", time_millisecond: "2024-08-06T15:02:00+08:00", time_microsecond: "2024-08-06T15:02:00+08:00", time_default: "2024-08-06T15:02:00+08:00", time_notSupport: "2024-08-06T15:02:00+08:00"}
 	timetest1Expected := timeExpected{
 		time_second:      time.Date(2024, 8, 6, 15, 2, 0, 0, UTC_PLUS_8).UTC(),
 		time_millisecond: time.Date(2024, 8, 6, 15, 2, 0, 0, UTC_PLUS_8).UTC(),
 		time_microsecond: time.Date(2024, 8, 6, 15, 2, 0, 0, UTC_PLUS_8).UTC(),
-		time_nanosecond:  time.Date(2024, 8, 6, 15, 2, 0, 0, UTC_PLUS_8).UTC(),
 		time_default:     time.Date(2024, 8, 6, 15, 2, 0, 0, UTC_PLUS_8).UTC(),
 		time_notSupport:  time.Date(2024, 8, 6, 15, 2, 0, 0, UTC_PLUS_8).UTC(),
 	}
@@ -359,7 +327,6 @@ func TestTimeTransformerWithTimeZone(t *testing.T) {
 	assert.Equal(t, timetest1Expected.time_second, result["time_second"].(time.Time).UTC())
 	assert.Equal(t, timetest1Expected.time_millisecond, result["time_millisecond"].(time.Time).UTC())
 	assert.Equal(t, timetest1Expected.time_microsecond, result["time_microsecond"].(time.Time).UTC())
-	assert.Equal(t, timetest1Expected.time_nanosecond, result["time_nanosecond"].(time.Time).UTC())
 	assert.Equal(t, timetest1Expected.time_default, result["time_default"].(time.Time).UTC())
 	assert.Equal(t, timetest1Expected.time_notSupport, result["time_notSupport"].(time.Time).UTC())
 }
@@ -367,13 +334,12 @@ func TestTimeTransformerWithTimeZone(t *testing.T) {
 func TestTimeTransformerWithNull(t *testing.T) {
 
 	transformer, testTimeSourceSchema := SetupTimeTransformer(t, testTimeSource)
-	timetest1 := timeInput{time_second: "", time_millisecond: "", time_microsecond: "", time_nanosecond: "", time_default: "", time_notSupport: ""}
+	timetest1 := timeInput{time_second: "", time_millisecond: "", time_microsecond: "", time_default: "", time_notSupport: ""}
 	result := TimeTransform(t, testTimeSourceSchema, transformer, timetest1)
 
 	assert.Equal(t, nil, result["time_second"])
 	assert.Equal(t, nil, result["time_millisecond"])
 	assert.Equal(t, nil, result["time_microsecond"])
-	assert.Equal(t, nil, result["time_nanosecond"])
 	assert.Equal(t, nil, result["time_default"])
 	assert.Equal(t, nil, result["time_notSupport"])
 }
@@ -381,14 +347,13 @@ func TestTimeTransformerWithNull(t *testing.T) {
 func TestTimeTransformerWithSpace(t *testing.T) {
 
 	transformer, testTimeSourceSchema := SetupTimeTransformer(t, testTimeSource)
-	timetest1 := timeInput{time_second: " ", time_millisecond: " ", time_microsecond: " ", time_nanosecond: " ", time_default: " ", time_notSupport: " "}
-	timetest1Expected := timeExpected{time_second: NULL_TIME, time_millisecond: NULL_TIME, time_microsecond: NULL_TIME, time_nanosecond: NULL_TIME, time_default: NULL_TIME, time_notSupport: NULL_TIME}
+	timetest1 := timeInput{time_second: " ", time_millisecond: " ", time_microsecond: " ", time_default: " ", time_notSupport: " "}
+	timetest1Expected := timeExpected{time_second: NULL_TIME, time_millisecond: NULL_TIME, time_microsecond: NULL_TIME, time_default: NULL_TIME, time_notSupport: NULL_TIME}
 	result := TimeTransform(t, testTimeSourceSchema, transformer, timetest1)
 
 	assert.Equal(t, timetest1Expected.time_second, result["time_second"].(time.Time).UTC())
 	assert.Equal(t, timetest1Expected.time_millisecond, result["time_millisecond"].(time.Time).UTC())
 	assert.Equal(t, timetest1Expected.time_microsecond, result["time_microsecond"].(time.Time).UTC())
-	assert.Equal(t, timetest1Expected.time_nanosecond, result["time_nanosecond"].(time.Time).UTC())
 	assert.Equal(t, timetest1Expected.time_default, result["time_default"].(time.Time).UTC())
 	assert.Equal(t, timetest1Expected.time_notSupport, result["time_notSupport"].(time.Time).UTC())
 }
@@ -396,14 +361,13 @@ func TestTimeTransformerWithSpace(t *testing.T) {
 func TestTimeTransformerWithRandomAlphabet(t *testing.T) {
 
 	transformer, testTimeSourceSchema := SetupTimeTransformer(t, testTimeSource)
-	timetest1 := timeInput{time_second: "abc", time_millisecond: "abc", time_microsecond: "abc", time_nanosecond: "abc", time_default: "abc", time_notSupport: "abc"}
-	timetest1Expected := timeExpected{time_second: NULL_TIME, time_millisecond: NULL_TIME, time_microsecond: NULL_TIME, time_nanosecond: NULL_TIME, time_default: NULL_TIME, time_notSupport: NULL_TIME}
+	timetest1 := timeInput{time_second: "abc", time_millisecond: "abc", time_microsecond: "abc", time_default: "abc", time_notSupport: "abc"}
+	timetest1Expected := timeExpected{time_second: NULL_TIME, time_millisecond: NULL_TIME, time_microsecond: NULL_TIME, time_default: NULL_TIME, time_notSupport: NULL_TIME}
 	result := TimeTransform(t, testTimeSourceSchema, transformer, timetest1)
 
 	assert.Equal(t, timetest1Expected.time_second, result["time_second"].(time.Time).UTC())
 	assert.Equal(t, timetest1Expected.time_millisecond, result["time_millisecond"].(time.Time).UTC())
 	assert.Equal(t, timetest1Expected.time_microsecond, result["time_microsecond"].(time.Time).UTC())
-	assert.Equal(t, timetest1Expected.time_nanosecond, result["time_nanosecond"].(time.Time).UTC())
 	assert.Equal(t, timetest1Expected.time_default, result["time_default"].(time.Time).UTC())
 	assert.Equal(t, timetest1Expected.time_notSupport, result["time_notSupport"].(time.Time).UTC())
 }
@@ -411,14 +375,13 @@ func TestTimeTransformerWithRandomAlphabet(t *testing.T) {
 func TestTimeTransformerWithChinese(t *testing.T) {
 
 	transformer, testTimeSourceSchema := SetupTimeTransformer(t, testTimeSource)
-	timetest1 := timeInput{time_second: "中文", time_millisecond: "中文", time_microsecond: "中文", time_nanosecond: "中文", time_default: "中文", time_notSupport: "中文"}
-	timetest1Expected := timeExpected{time_second: NULL_TIME, time_millisecond: NULL_TIME, time_microsecond: NULL_TIME, time_nanosecond: NULL_TIME, time_default: NULL_TIME, time_notSupport: NULL_TIME}
+	timetest1 := timeInput{time_second: "中文", time_millisecond: "中文", time_microsecond: "中文", time_default: "中文", time_notSupport: "中文"}
+	timetest1Expected := timeExpected{time_second: NULL_TIME, time_millisecond: NULL_TIME, time_microsecond: NULL_TIME, time_default: NULL_TIME, time_notSupport: NULL_TIME}
 	result := TimeTransform(t, testTimeSourceSchema, transformer, timetest1)
 
 	assert.Equal(t, timetest1Expected.time_second, result["time_second"].(time.Time).UTC())
 	assert.Equal(t, timetest1Expected.time_millisecond, result["time_millisecond"].(time.Time).UTC())
 	assert.Equal(t, timetest1Expected.time_microsecond, result["time_microsecond"].(time.Time).UTC())
-	assert.Equal(t, timetest1Expected.time_nanosecond, result["time_nanosecond"].(time.Time).UTC())
 	assert.Equal(t, timetest1Expected.time_default, result["time_default"].(time.Time).UTC())
 	assert.Equal(t, timetest1Expected.time_notSupport, result["time_notSupport"].(time.Time).UTC())
 }
@@ -426,14 +389,13 @@ func TestTimeTransformerWithChinese(t *testing.T) {
 func TestTimeTransformerWithSpecialCharacters(t *testing.T) {
 
 	transformer, testTimeSourceSchema := SetupTimeTransformer(t, testTimeSource)
-	timetest1 := timeInput{time_second: SPECIAL_CHARACTERS, time_millisecond: SPECIAL_CHARACTERS, time_microsecond: SPECIAL_CHARACTERS, time_nanosecond: SPECIAL_CHARACTERS, time_default: SPECIAL_CHARACTERS, time_notSupport: SPECIAL_CHARACTERS}
-	timetest1Expected := timeExpected{time_second: NULL_TIME, time_millisecond: NULL_TIME, time_microsecond: NULL_TIME, time_nanosecond: NULL_TIME, time_default: NULL_TIME, time_notSupport: NULL_TIME}
+	timetest1 := timeInput{time_second: SPECIAL_CHARACTERS, time_millisecond: SPECIAL_CHARACTERS, time_microsecond: SPECIAL_CHARACTERS, time_default: SPECIAL_CHARACTERS, time_notSupport: SPECIAL_CHARACTERS}
+	timetest1Expected := timeExpected{time_second: NULL_TIME, time_millisecond: NULL_TIME, time_microsecond: NULL_TIME, time_default: NULL_TIME, time_notSupport: NULL_TIME}
 	result := TimeTransform(t, testTimeSourceSchema, transformer, timetest1)
 
 	assert.Equal(t, timetest1Expected.time_second, result["time_second"].(time.Time).UTC())
 	assert.Equal(t, timetest1Expected.time_millisecond, result["time_millisecond"].(time.Time).UTC())
 	assert.Equal(t, timetest1Expected.time_microsecond, result["time_microsecond"].(time.Time).UTC())
-	assert.Equal(t, timetest1Expected.time_nanosecond, result["time_nanosecond"].(time.Time).UTC())
 	assert.Equal(t, timetest1Expected.time_default, result["time_default"].(time.Time).UTC())
 	assert.Equal(t, timetest1Expected.time_notSupport, result["time_notSupport"].(time.Time).UTC())
 }
@@ -441,14 +403,13 @@ func TestTimeTransformerWithSpecialCharacters(t *testing.T) {
 func TestTimeTransformerWithMaxLenString(t *testing.T) {
 
 	transformer, testTimeSourceSchema := SetupTimeTransformer(t, testTimeSource)
-	timetest1 := timeInput{time_second: MAX_LENGTH_STRING, time_millisecond: MAX_LENGTH_STRING, time_microsecond: MAX_LENGTH_STRING, time_nanosecond: MAX_LENGTH_STRING, time_default: MAX_LENGTH_STRING, time_notSupport: MAX_LENGTH_STRING}
-	timetest1Expected := timeExpected{time_second: NULL_TIME, time_millisecond: NULL_TIME, time_microsecond: NULL_TIME, time_nanosecond: NULL_TIME, time_default: NULL_TIME, time_notSupport: NULL_TIME}
+	timetest1 := timeInput{time_second: MAX_LENGTH_STRING, time_millisecond: MAX_LENGTH_STRING, time_microsecond: MAX_LENGTH_STRING, time_default: MAX_LENGTH_STRING, time_notSupport: MAX_LENGTH_STRING}
+	timetest1Expected := timeExpected{time_second: NULL_TIME, time_millisecond: NULL_TIME, time_microsecond: NULL_TIME, time_default: NULL_TIME, time_notSupport: NULL_TIME}
 	result := TimeTransform(t, testTimeSourceSchema, transformer, timetest1)
 
 	assert.Equal(t, timetest1Expected.time_second, result["time_second"].(time.Time).UTC())
 	assert.Equal(t, timetest1Expected.time_millisecond, result["time_millisecond"].(time.Time).UTC())
 	assert.Equal(t, timetest1Expected.time_microsecond, result["time_microsecond"].(time.Time).UTC())
-	assert.Equal(t, timetest1Expected.time_nanosecond, result["time_nanosecond"].(time.Time).UTC())
 	assert.Equal(t, timetest1Expected.time_default, result["time_default"].(time.Time).UTC())
 	assert.Equal(t, timetest1Expected.time_notSupport, result["time_notSupport"].(time.Time).UTC())
 }
@@ -456,14 +417,13 @@ func TestTimeTransformerWithMaxLenString(t *testing.T) {
 func TestTimeTransformerWithOnlyNumber(t *testing.T) {
 
 	transformer, testTimeSourceSchema := SetupTimeTransformer(t, testTimeSource)
-	timetest1 := timeInput{time_second: "5", time_millisecond: "5", time_microsecond: "5", time_nanosecond: "5", time_default: "5", time_notSupport: "5"}
-	timetest1Expected := timeExpected{time_second: NULL_TIME, time_millisecond: NULL_TIME, time_microsecond: NULL_TIME, time_nanosecond: NULL_TIME, time_default: NULL_TIME, time_notSupport: NULL_TIME}
+	timetest1 := timeInput{time_second: "5", time_millisecond: "5", time_microsecond: "5", time_default: "5", time_notSupport: "5"}
+	timetest1Expected := timeExpected{time_second: NULL_TIME, time_millisecond: NULL_TIME, time_microsecond: NULL_TIME, time_default: NULL_TIME, time_notSupport: NULL_TIME}
 	result := TimeTransform(t, testTimeSourceSchema, transformer, timetest1)
 
 	assert.Equal(t, timetest1Expected.time_second, result["time_second"].(time.Time).UTC())
 	assert.Equal(t, timetest1Expected.time_millisecond, result["time_millisecond"].(time.Time).UTC())
 	assert.Equal(t, timetest1Expected.time_microsecond, result["time_microsecond"].(time.Time).UTC())
-	assert.Equal(t, timetest1Expected.time_nanosecond, result["time_nanosecond"].(time.Time).UTC())
 	assert.Equal(t, timetest1Expected.time_default, result["time_default"].(time.Time).UTC())
 	assert.Equal(t, timetest1Expected.time_notSupport, result["time_notSupport"].(time.Time).UTC())
 }

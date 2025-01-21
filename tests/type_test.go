@@ -86,7 +86,7 @@ var arraySchema9 = `{
     }
 }`
 
-func TestWorngSubtype(t *testing.T) {
+func TestWrongSubtype(t *testing.T) {
 
 	testSourceSchema := schemer.NewSchema()
 
@@ -117,7 +117,7 @@ func TestWorngSubtype(t *testing.T) {
 	assert.Error(t, err)
 }
 
-func TestWorngtype(t *testing.T) {
+func TestWrongtype(t *testing.T) {
 
 	var errorTypeSchema = `{
 		"uint_col":{
