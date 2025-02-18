@@ -2,6 +2,7 @@ package schemer
 
 import (
 	"fmt"
+	"math/big"
 	"reflect"
 	"strconv"
 	"time"
@@ -70,6 +71,29 @@ func getValue(def *Definition, data interface{}) (interface{}, error) {
 	return v, nil
 }
 
+func float64ToString(d float64) string {
+	// conver to  big.Float
+	bf := big.NewFloat(d)
+	// to string
+	return bf.Text('f', -1)
+}
+
+func wrapParseInt64(d string) int64 {
+	bi := new(big.Int)
+	bi.SetString(d, 10)
+	mask := new(big.Int).SetUint64(^uint64(0)) // 2^64 - 1
+	bi.And(bi, mask)                           // 限制數值為 `uint64` 範圍
+	return int64(bi.Int64())                   // 處理補數回繞
+}
+
+func wrapParseUint64(d string) uint64 {
+	bi := new(big.Int)
+	bi.SetString(d, 10)
+	mask := new(big.Int).SetUint64(^uint64(0)) // 0xFFFFFFFFFFFFFFFF，即 `2^64 - 1`
+	bi.And(bi, mask)                           // 限制數值為 `uint64` 範圍
+	return bi.Uint64()
+}
+
 func getIntegerValue(def *Definition, data interface{}) (int64, error) {
 
 	switch d := data.(type) {
@@ -78,11 +102,7 @@ func getIntegerValue(def *Definition, data interface{}) (int64, error) {
 	case uint64:
 		return int64(d), nil
 	case string:
-		result, err := strconv.ParseInt(d, 10, 64)
-		if err != nil {
-			return 0, ErrInvalidType
-		}
-
+		result := wrapParseInt64(d)
 		return result, nil
 	case bool:
 		if d {
@@ -91,7 +111,9 @@ func getIntegerValue(def *Definition, data interface{}) (int64, error) {
 			return int64(0), nil
 		}
 	case float64:
-		return int64(d), nil
+		str := float64ToString(d)
+		result := wrapParseInt64(str)
+		return result, nil
 	case time.Time:
 		return d.Unix(), nil
 	}
@@ -111,11 +133,7 @@ func getUnsignedIntegerValue(def *Definition, data interface{}) (uint64, error) 
 	case uint64:
 		return d, nil
 	case string:
-		result, err := strconv.ParseUint(d, 10, 64)
-		if err != nil {
-			return 0, ErrInvalidType
-		}
-
+		result := wrapParseUint64(d)
 		return result, nil
 	case bool:
 		if d {
@@ -124,7 +142,9 @@ func getUnsignedIntegerValue(def *Definition, data interface{}) (uint64, error) 
 			return uint64(0), nil
 		}
 	case float64:
-		return uint64(d), nil
+		str := float64ToString(d)
+		result := wrapParseUint64(str)
+		return result, nil
 	case time.Time:
 		return uint64(d.Unix()), nil
 	}
